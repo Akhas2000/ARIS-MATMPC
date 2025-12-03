@@ -104,8 +104,8 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 
 
 %% Simulation Duration
-Tf_init =26;  % simulation time
-T_stabilization=4;
+Tf_init =27;  % simulation time
+T_stabilization=8;
 Tf=Tf_init+T_stabilization;
 
 %% Reference Trajectory Generation
@@ -180,26 +180,34 @@ Ns=size(pathXY_ProxyUtility,1);
 
 
 
+
+
+
+
 % -------- NoT : No orientation Tracking --------
-q_eul   = [0;0;0];
-q_omega = 0.03;
-q_p     = 1.4;
-q_v     = 0.2;
-q_sv    = 0.5e-11;
+
+q_rot=0; 
+q_omega=0;
+q_sv=0.5*1e-11;
+q_p=6;
+q_h=10;
+q_v=0.9;
 
 [controls_NoT, state_NoT, time_NoT, data_NoT] = ...
-    Simulation_Scale(settings,opt,N,Ns,q_sv,q_p,q_v,q_eul,q_omega, ...
+    Simulation_Scale(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
                     h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
 
 % -------- HoT : Horizontal orientation Tracking --------
-q_eul   = [8;8;8];
-q_omega = 0.03;
-q_p     = 1.4;
-q_v     = 0.2;
-q_sv    = 0.5e-11;
+
+q_rot=8; 
+q_omega=2.5;
+q_sv=0.5*1e-11;
+q_p=6;
+q_h=10;
+q_v=0.9;
 
 [controls_HoT, state_HoT, time_HoT, data_HoT] = ...
-    Simulation_Scale(settings,opt,N,Ns,q_sv,q_p,q_v,q_eul,q_omega, ...
+    Simulation_Scale(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
                     h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
 
 

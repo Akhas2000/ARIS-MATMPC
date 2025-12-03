@@ -1,4 +1,4 @@
-function [controls_MPC, state_sim, time, data]  = Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_v,q_eul,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization)
+function [controls_MPC, state_sim, time, data]  = Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization)
 
 Ts = settings.Ts_st;     % Closed-loop sampling time (usually = shooting interval)
 
@@ -21,7 +21,7 @@ if opt.nonuniform_grid
     N = r;
     settings.N = N;
 else
-    [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_v,q_eul,q_omega,h_UAV,pathXY_ProxyUtility);
+    [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility);
 end  
 
 %% Initialize Solvers (only for advanced users)
