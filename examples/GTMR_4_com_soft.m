@@ -12,6 +12,8 @@ addpath(genpath('Functions'));
 K_User = 5;
 N_A = 3; % Antenna elements
 M_size = [4,4];
+
+
 M_ele = M_size(1) * M_size(2); % RIS elements
 
 freq = 2 * 10^9; % GHz
@@ -26,15 +28,15 @@ R_min=2*10^6;
 nx   = 13+K_User;   % p(3), q(4), v(3), ω(3),sv1,...,svKUser
 nu   = 4+K_User;    % thrust and torques Omega1,...,Omega4,sv1_dot,...,svKUser_dot
 nz   = 0;
-ny   = 6+K_User+3+3;    % outputs: p(3), v(3),omega(3), sv1,...,svKUser, omega(3), eta(3)
-nyN  = 6+K_User+3+3;    % terminal outputs: p(3), v(3), sv1,...,svKUser, omega(3), eta(3)
+ny   = 6+K_User+3+1;    % outputs: p(3), v(3),omega(3), sv1,...,svKUser, omega(3), geosedic_dist(1)
+nyN  = 6+K_User+3+1;    % terminal outputs: p(3), v(3), sv1,...,svKUser, omega(3), geosedic_dist(1)
 np   = 0;    % no online parameters
-nc   = K_User;
-ncN  = K_User;
+nc   = K_User+1; % K QoS contraints+1 velocity constraints
+ncN  = K_User+1; % K QoS contraints+1 velocity constraints
 nbu  = 4;
 nbu_idx = 1:4;
-nbx=3+3+K_User;
-nbx_idx = [1:3,8:10,14:13+K_User];
+nbx=3+K_User;
+nbx_idx = [1:3,14:13+K_User];
 
 
 
@@ -178,12 +180,12 @@ Rates=Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,f_phases,Power,Bandwidth,freq,b
 %R_Global=sum(Rates);
 
 %% outputs & costs
-eta = quatToEuler_CASADI( q);% quaternion conversion into euler angles
-
-sin_eta=sin(eta);
 
 
-h  = [p; v; sv; omega; sin_eta];
+q_horizontal=[1;0;0;0];
+geosedic_distance = quatGeodesicDistance(q, q_horizontal);
+
+h  = [p; v; sv; omega; geosedic_distance];
 hN = h;
 
 Q_mat=diag(Q);
@@ -211,8 +213,19 @@ objN_GGN = 0.5 * ( (auxN - refN)' * (auxN - refN) );
 %% Constraints : soft communication constraints
 
 
-general_con   = Rates'+sv.^2 -R_min*ones(K_User,1);
-general_con_N = Rates'+sv.^2 -R_min*ones(K_User,1);
+norm_v = sqrt((v(1)+1e-9)^2 + (v(2)+1e-9)^2 + (v(3)+1e-9)^2);
+
+
+Rates = Rates(:);
+sv    = sv(:);
+
+general_con   = [Rates + sv.^2 - R_min*ones(K_User,1);
+                 norm_v];
+
+general_con_N = general_con;
+
+% general_con   = [Rates'+sv.^2 -R_min*ones(K_User,1), norm_v];
+% general_con_N = [Rates'+sv.^2 -R_min*ones(K_User,1), norm_v ];
 
 
 
@@ -223,42 +236,34 @@ Ts_st = 0.01;
 
 %% Functions 
 
-function euler = quatToEuler_CASADI( quat )
-% Converts a quaternion vector to XYZ Euler angles (RPY). This function works 
-% with CASADI vectors
-%
-% euler = quatToEuler( quat ), quaternion is of the form q = [w x y z]
-%
-% The quaternion (quat) must be written as a 4-by-1 matrix with the scalar
-% element as the fourth component.
-% The returned Euler angles vector will be written in radiants as a 3-by-1 vector.
-%
-% References:
-% [1] Markley, F. Landis. "Attitude error representations for Kalman filtering." 
-% Journal of guidance control and dynamics 26.2 (2003): 311-317.
+function d = quatGeodesicDistance(q1, q2)
+% Geodesic distance between two UNIT quaternions q1 and q2
+% q = [w x y z]' (scalar-first convention)
+% Assumes q1 and q2 are already normalized
 
-% To work with CASADI vectors
-import casadi.*
+    % Conjugate of q2
+    q2_conj = [q2(1); -q2(2:4)];
 
-% Vector initialization
-euler = SX(zeros(3,1));
+    % Quaternion multiplication: q = q1 * q2*
+    q = quatMultiply(q1, q2_conj);
 
-norm = sqrt(quat(1)^2 + quat(2)^2 + quat(3)^2 + quat(4)^2);
-quat(1) = quat(1) / norm;
-quat(2) = quat(2) / norm;
-quat(3) = quat(3) / norm;
-quat(4) = quat(4) / norm;
+    % Numerical clamp for safety
+    w = min(max(q(1), -1), 1);
 
-A11 = quat(1)^2 - quat(2)^2 - quat(3)^2 + quat(4)^2;
-A12 = 2*quat(1)*quat(2) + 2*quat(3)*quat(4);
-A13 = 2*quat(1)*quat(3) - 2*quat(2)*quat(4);
-A23 = 2*quat(1)*quat(4) + 2*quat(2)*quat(3);
-A33 = - quat(1)^2 - quat(2)^2 + quat(3)^2 + quat(4)^2;
+    % Geodesic distance = rotation angle between them
+    angle = acos(w);
+    d = 2 * angle;
+end
 
-phi = atan2(A12, A11);
-theta = - asin(A13);
-psi = atan2(A23, A33);
+%-------------------------------------
+% Quaternion multiplication
+%-------------------------------------
+function q = quatMultiply(q1, q2)
+    w1 = q1(1); v1 = q1(2:4);
+    w2 = q2(1); v2 = q2(2:4);
 
-euler = [ phi, theta, psi]';
+    w = w1*w2 - dot(v1, v2);
+    v = w1*v2 + w2*v1 + cross(v1, v2);
 
+    q = [w; v];
 end

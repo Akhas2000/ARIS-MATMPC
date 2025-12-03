@@ -9,13 +9,9 @@ addpath(genpath('Functions'));
 
 %------------------------------------------%
 %% Communication variables
-K_User = settings.K_User;
-N_A    = settings.N_A;
-M_size = settings.M_size;
-
-
-
-
+K_User = 5;
+N_A = 3; % Antenna elements
+M_size = [4,4];
 M_ele = M_size(1) * M_size(2); % RIS elements
 
 freq = 2 * 10^9; % GHz
@@ -214,15 +210,22 @@ objN_GGN = 0.5 * ( (auxN - refN)' * (auxN - refN) );
 
 %% Constraints : soft communication constraints
 
-
-norm_v = sqrt((v(1)+1e-9)^2 + (v(2)+1e-9)^2 + (v(3)+1e-9)^2);
-
+norm_v = sqrt(v(1)^2 + v(2)^2 + v(3)^2);
 
 Rates = Rates(:);
 sv    = sv(:);
 
 general_con   = [Rates + sv.^2 - R_min*ones(K_User,1);
                  norm_v];
+
+general_con_N = general_con;
+
+
+Rates = Rates(:);
+sv    = sv(:);
+
+general_con   = [Rates + sv.^2 - R_min*ones(K_User,1);
+                 norm(v)+1e-9];
 
 general_con_N = general_con;
 
