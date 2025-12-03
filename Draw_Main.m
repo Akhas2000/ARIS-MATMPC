@@ -602,3 +602,4 @@ function q = quatMultiply(q1, q2)
 
     q = [w; v];
 end
+
