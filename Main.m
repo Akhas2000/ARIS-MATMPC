@@ -97,8 +97,8 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 
 
 %% Simulation Duration
-Tf_init =26;  % simulation time
-T_stabilization=4;
+Tf_init =27;  % simulation time
+T_stabilization=8;
 Tf=Tf_init+T_stabilization;
 
 %% Reference Trajectory Generation
@@ -107,7 +107,7 @@ Tf=Tf_init+T_stabilization;
 xmin = -200;  xmax =  200;            % [m] rectangle in x
 ymin = -200;  ymax =  200;            % [m] rectangle in y
 h_UAV = 100;                          % [m] fixed altitude
-Nrand = 30000;                        % << huge number of random nodes
+Nrand = 20000;                        % << huge number of random nodes
 
 R = eye(3);                           % rotation (identity)
 pA=settings.pA; 
@@ -120,8 +120,7 @@ beta_B=settings.beta_B;
 freq=settings.freq; 
 p_bar_User=settings.p_bar_User; 
 % ---------- RANDOM NODE CO-ORDINATES ----------------------------------
-% seed_Ref_gen=5;
-% rng(seed_Ref_gen);
+
 x_vals = xmin + (xmax-xmin)*rand(1,Nrand);   % 1×Nrand
 y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node
@@ -153,7 +152,7 @@ p_init  =  [-100 -100];         % start (physical coordinate)
 p_final = [ -100   100];      % destination
 
 
-[pathXY_ProxyUtility] = optimalTrajectoryPU_Astar( ...
+[pathXY_ProxyUtility] = optimalTrajectoryPU( ...
                            Proxy_Utility_mat, x_vals, y_vals, ...
                            p_init, p_final, ...
                            'k', 8);            % 8-nearest neighbours
@@ -174,25 +173,30 @@ Ns=size(pathXY_ProxyUtility,1);
 
 
 % -------- NoT : No orientation Tracking --------
-q_eul   = [0;0;0];
-q_omega = 0.03;
-q_p     = 1.4;
-q_v     = 0.2;
-q_sv    = 0.5e-11;
+
+q_rot=0; 
+q_omega=0;
+q_sv=0.5*1e-11;
+q_p=6;
+q_h=10;
+q_v=0.9;
+
+
 
 [controls_NoT, state_NoT, time_NoT, data_NoT] = ...
-    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_v,q_eul,q_omega, ...
+    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
                     h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
 
-% -------- HoT : Horizontal orientation Tracking --------
-q_eul   = [8;8;8];
-q_omega = 0.03;
-q_p     = 1.4;
-q_v     = 0.2;
-q_sv    = 0.5e-11;
+% -------- HoT : Horizontal orientation Tracking--------
 
+q_rot=8; 
+q_omega=2.5;
+q_sv=0.5*1e-11;
+q_p=6;
+q_h=10;
+q_v=0.9;
 [controls_HoT, state_HoT, time_HoT, data_HoT] = ...
-    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_v,q_eul,q_omega, ...
+    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
                     h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
 
 save("HoT_NoT_uMRAV_Both.mat")

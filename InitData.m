@@ -21,7 +21,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
         %% Tracking with soft communication constraint
          case {'GTMR_4_com_soft', 'RIS_44', 'RIS_28','RIS_82'}
             %% Initial conditions
-            v_max=20;v_min=-20;data.v_min=v_min;data.v_max=v_max;
+            v_max=17;v_min=0;data.v_min=v_min;data.v_max=v_max;
             
             Omega_min=16^2;Omega_max=100^2;data.Omega_min=Omega_min;data.Omega_max=Omega_max;%Hz^2
 
@@ -39,25 +39,27 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
 
 
             %% Weights
-            q_rot=8;
-            q_yaw=8;
-            q_omega=0.03;
+
+
+            q_rot=8; 
+            q_omega=2.5;
             q_sv=0.5*1e-11;
-            q_p=1.4;
-            q_v=0.2;
-            %q_0=[q_p;q_p;q_p; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot;q_rot;q_rot;q_rot];
-            q_0=[q_p;q_p;q_p; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot;q_rot;q_yaw];
+            q_p=6;
+            q_h=10;
+            q_v=0.9;
+
+             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
             QN =    q_0;   
             data.q_0=q_0;
             %% Bounds on states (none) and controls Ω_i ≥ 0
-            lb_x = [-400;-400;-200;v_min;v_min;v_min;zeros(K_User,1)];
-            ub_x = [400;400;200;v_max;v_max;v_max;inf*ones(K_User,1)];
+            lb_x = [-400;-400;-200;zeros(K_User,1)];
+            ub_x = [400;400;200;inf*ones(K_User,1)];
             lb_u = [Omega_min*ones(4,1)];
             ub_u = [Omega_max*ones(4,1)];
-            lb_g = zeros(K_User,1);
-            ub_g = inf*ones(K_User,1);
+            lb_g = [zeros(K_User,1);v_min];
+            ub_g = [inf*ones(K_User,1);v_max];
             lb_gN= lb_g;
             ub_gN= ub_g;
 
@@ -171,8 +173,8 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             data.REF(:,6+K_User+1:6+K_User+3) = zeros(Ns, 3);%omega_ref(1:2)
             % q_identity = [1, 0, 0, 0];     
             % data.REF(:,6+K_User+3+1:end) = repmat(q_identity, Ns, 1);   % q_ref:Ns x 4 matrix
-            eta_ref = [0, 0, 0];     
-            data.REF(:,6+K_User+3+1:end) = repmat(eta_ref, Ns, 1);   % eta_ref:Ns x 3 matrix
+            geosedic_ref = 0;     
+            data.REF(:,6+K_User+3+1) = repmat(geosedic_ref, Ns, 1);   % geosedic_ref:Ns x 1 matrix
         
 
         case 'Simplified_UAV_Kinematic'

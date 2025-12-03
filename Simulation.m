@@ -98,8 +98,8 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
 
 % Simulation Duration
-Tf_init =16;  % simulation time
-T_stabilization=3;% Additional time given to allow the position, orientation, velocity and angular velocity to reach the final desired value
+Tf_init =27;  % simulation time
+T_stabilization=8;% Additional time given to allow the position, orientation, velocity and angular velocity to reach the final desired value
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
@@ -118,8 +118,7 @@ beta_B=settings.beta_B;
 freq=settings.freq; 
 p_bar_User=settings.p_bar_User; 
 % ---------- RANDOM NODE CO-ORDINATES ----------------------------------
-seed_Ref_gen=5;
-rng(seed_Ref_gen);
+
 x_vals = xmin + (xmax-xmin)*rand(1,Nrand);   % 1×Nrand
 y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node

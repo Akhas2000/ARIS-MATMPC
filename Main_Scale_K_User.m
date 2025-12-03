@@ -70,16 +70,18 @@ end
 %% ---- Plot Results ----
 figure; hold on; grid on; box on;
 
-plot(K_set, Tot_HoT_BP,'-o','LineWidth',1.5);
-plot(K_set, Tot_NoT_BP,'-s','LineWidth',1.5);
-plot(K_set, Tot_HoT_P, '-^','LineWidth',1.5);
-plot(K_set, Tot_NoT_P, '-v','LineWidth',1.5);
-plot(K_set, Tot_HoT_B, '-d','LineWidth',1.5);
-plot(K_set, Tot_NoT_B, '-x','LineWidth',1.5);
+
+
+plot(K_set, Tot_HoT_BP,'-o','LineWidth',1.5,'DisplayName','HoT-BP');
+plot(K_set, Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
+plot(K_set, Tot_NoT_BP,'-s','LineWidth',1.5,'DisplayName','NoT-BP');
+plot(K_set, Tot_NoT_P, '-v','LineWidth',1.5,'DisplayName','NoT-P');
+plot(K_set, Tot_HoT_B, '-d','LineWidth',1.5,'DisplayName','HoT-B');
+plot(K_set, Tot_NoT_B, '-x','LineWidth',1.5,'DisplayName','NoT-B');
 
 xlabel('Number of Users (K)');
 ylabel('Total Transmitted Data');
-title('Performance Comparison of All Schemes');
-legend('HoT-BP','NoT-BP','HoT-P','NoT-P','HoT-B','NoT-B','Location','Best');
+%title('Performance Comparison of All Schemes');
+legend('Location','Best');
 
 save("Data_Scale_K_USER_Vs_Transmitted_Data.mat")

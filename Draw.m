@@ -215,10 +215,16 @@ switch settings.model
         %% --- Figure: Velocity ------------------------------------------
         v_sim = state_sim(:,8:10);
         v_min = data.v_min; v_max = data.v_max;
+
+        vx = v_sim(:,1);
+        vy = v_sim(:,2);
+        vz = v_sim(:,3);
+        
+        % Speed over time
+        v_mag = sqrt(vx.^2 + vy.^2 + vz.^2);
+
         figure; hold on;
-        plot(time, v_sim(:,1), 'LineWidth',1.5,'DisplayName','v_x');
-        plot(time, v_sim(:,2), 'LineWidth',1.5,'DisplayName','v_y');
-        plot(time, v_sim(:,3), 'LineWidth',1.5,'DisplayName','v_z');
+        plot(time, v_mag, 'LineWidth',1.5,'DisplayName','V');
         yline(v_min,'--k','LineWidth',1.5); yline(v_max,'--k','LineWidth',1.5);
         xlabel('Time (s)'); ylabel('Velocity (m/s)');
         legend('show'); grid on; hold off;

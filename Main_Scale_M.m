@@ -1,7 +1,7 @@
 clear all; clear mex; close all; clc;
 
 %% Parameters
-K_User = 2;                 % Fixed number of users
+K_User = 6;                 % Fixed number of users
 N_A    = 3;                 % Antenna elements
 N_iter = 5;                 % Number of random realizations
 
@@ -76,18 +76,18 @@ end
 %% ---- Plot Results ----
 figure; hold on; grid on; box on;
 
-plot(M_rows*M_size(2), Tot_HoT_BP,'-o','LineWidth',1.5);
-plot(M_rows*M_size(2), Tot_HoT_P, '-^','LineWidth',1.5);
-plot(M_rows*M_size(2), Tot_NoT_BP,'-s','LineWidth',1.5);
-plot(M_rows*M_size(2), Tot_NoT_P, '-v','LineWidth',1.5);
-plot(M_rows*M_size(2), Tot_HoT_B, '-d','LineWidth',1.5);
-plot(M_rows*M_size(2), Tot_NoT_B, '-x','LineWidth',1.5);
+plot(M_rows*M_size(2), Tot_HoT_BP,'-o','LineWidth',1.5,'DisplayName','HoT-BP');
+plot(M_rows*M_size(2), Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
+plot(M_rows*M_size(2), Tot_NoT_BP,'-s','LineWidth',1.5,'DisplayName','NoT-BP');
+plot(M_rows*M_size(2), Tot_NoT_P, '-v','LineWidth',1.5,'DisplayName','NoT-P');
+plot(M_rows*M_size(2), Tot_HoT_B, '-d','LineWidth',1.5,'DisplayName','HoT-B');
+plot(M_rows*M_size(2), Tot_NoT_B, '-x','LineWidth',1.5,'DisplayName','NoT-B');
+
 
 xlabel('Number of RIS elements (M)');
 ylabel('Total Transmitted Data');
-title('Performance vs. RIS Size (K = 2)');
-legend('HoT-BP','NoT-BP','HoT-P','NoT-P','HoT-B','NoT-B', ...
-       'Location','Best');
+%title('Performance vs. RIS Size');
+legend('Location','Best');
 
 
 save("Data_Scale_M_size_Vs_Transmitted_Data.mat")
