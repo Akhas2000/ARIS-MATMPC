@@ -49,8 +49,6 @@ ARIS_Main/  — Project root (UAV + Communication focused)
       InitData_Main.m                      — Builds MATMPC-ready input/data from settings, path & weights
       Simulation_Main.m                    — Runs the closed-loop simulation with horizon/weights/path
     Robotic_Functions/                     — UAV trajectory & kinematic utilities
-      densifyToNs.m                        — Resamples path to `Ns` points (matches simulation steps)
-      smoothPath.m                         — Smooths UAV path to eliminate sharp turns
       optimalTrajectoryPU.m                — Path planning maximizing proxy utility (rate proxy)
       optimalTrajectoryRandomKNN.m         — Randomized KNN path planning variant
       quaternion_geodesic_distance.m       — Attitude distance on SO(3)
