@@ -68,11 +68,8 @@ ARIS_Main/  — Project root (UAV + Communication focused)
 1. **Initialization & Path**
    - Adds `Functions/` to MATLAB path.
    - Sets timing: `Ts_st`, `Tf_init`, `T_stabilization` and `Ns = Tf_init/Ts_st`.
-   - Builds UAV **proxy‑utility path**, then:
-     ```matlab
-     pathXY_ProxyUtility = densifyToNs(pathXY_ProxyUtility, Ns);
-     pathXY_ProxyUtility = smoothPath(pathXY_ProxyUtility, 150);
-     ```
+   - Builds UAV **proxy‑utility path**, with `optimalTrajectoryPU.m` and densifies it with a zero-order hold (ZOH) technique.
+     
 
 2. **Prepare Input/Data (MATMPC_Functions)**
    - `InitData_Main.m` constructs MATMPC‑ready I/O from current settings, weights & path:
