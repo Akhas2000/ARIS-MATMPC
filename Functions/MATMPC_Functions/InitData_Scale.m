@@ -44,11 +44,11 @@ function [input, data]  = InitData_Scale(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_om
             
             
 
-            %q_0=[q_p;q_p;q_p; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot;q_rot;q_rot;q_rot];
+            
             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
-            QN =    q_0;   
+            QN =    [q_p;q_p;q_h; q_v;q_v;q_v;zeros(K_User,1);q_omega;q_omega;q_omega;q_rot];   
             data.q_0=q_0;
             %% Bounds on states (none) and controls Ω_i ≥ 0
             lb_x = [-400;-400;-200;zeros(K_User,1)];
@@ -59,6 +59,7 @@ function [input, data]  = InitData_Scale(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_om
             ub_g = [inf*ones(K_User,1);v_max];
             lb_gN= lb_g;
             ub_gN= ub_g;
+
 
 
 
@@ -129,7 +130,6 @@ function [input, data]  = InitData_Scale(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_om
             geosedic_ref = 0;     
             data.REF(:,6+K_User+3+1) = repmat(geosedic_ref, Ns, 1);   % eta_ref:Ns x 3 matrix
             
-
      
 
            

@@ -1,231 +1,165 @@
-# ARIS_Main Integrated With MATMPC
+# Global HELP — UAV Model & Communication (Focus on `Main.m`)
 
-> UAV-RIS Simulation Framework using CasADi + MATMPC + ARIS
+_Last updated: 2025-10-08 14:46_
 
----
-
-## Overview
-
-This documentation explains:
-
-- How **CasADi**, **MATMPC**, and **ARIS_Main** work together
-- The **correct installation procedure**
-- What files must be **replaced vs kept**
-- How **Simulation_Main**, **Simulation_Scale**, and their Init functions connect
-- Which scripts require **Model_Generation** and which do **not**
+This document covers the **UAV model**, **trajectory utilities**, **RIS-assisted communication & rate computation**, and the **main simulation flow**.  
+Solver internals are omitted **except** the two entry points used by `Main.m`: `InitData_Main.m` and `Simulation_Main.m`.
 
 ---
 
-## Correct Folder Architecture
+## 1) Fast Run — Executing the Full Scenario
 
-> **Very Important**: MATMPC must contain **all executable components**
-
-```
-MATMPC/
-├── casadi/                    # Place CasADi here
-├── core/
-├── examples/                  # Replace with ARIS examples only
-├── Functions/                 # Move ARIS Functions folder here
-├── InitData_Main.m           # ARIS version replaces built-in one
-├── Simulation_Main.m         # ARIS version replaces built-in one
-├── Model_Generation.m        # ARIS version replaces built-in one
-├── Draw.m                    # ARIS version replaces built-in one
-└── [ARIS extra files...]
-```
-
-### Critical Integration Rules
-
-Your **ARIS_Main folder MUST NOT be copied inside MATMPC as a folder.**
-
-Instead:
-
-- The **Functions** folder must be placed inside `MATMPC/Functions/`
-
-- The **examples** inside MATMPC should be replaced by the ARIS project **examples** folder
-
-- All other ARIS `.m` files must be placed directly in the MATMPC root
-
-If any file already exists (Simulation, Model_Generation, Init, Draw):
-→ **Replace it with the ARIS version**
-
----
-
-## How CasADi + MATMPC + ARIS Interact
-
-There are **three simulation engines**, each with its own Init + Model + Simulation logic.
-
-### Main Simulation Engine (Full MPC Simulation)
-
-**Files involved:**
-- `Main.m`
-- `Simulation_Main.m`
-- `InitData_Main.m`
-- `Model_Generation.m`
-
-#### 1 Main.m
-Top-level script. Calls `Simulation_Main.m`.
-
-#### Simulation_Main.m
-Runs the **MPC loop**.
-
-Calls:
-- `InitData_Main` ← Initialization
-- CasADi ← Symbolic functions
-- MATMPC solver ← Optimization at each step
-
-#### InitData_Main.m
-Used **only** in `Simulation_Main`.
-
-Creates:
-- MPC weights
-- UAV initial state 
-- Reference path
-- All solver options
-
-
-#### Model_Generation.m
-Used **before Main.m**
-
-Creates:
-- UAV CasADi SX dynamics
-- Jacobians
-- Integrators
-- Predictor functions
-
-### 2 Scaling Simulation Engine
-
-They allow for the selection of the number of RIS elements, the number of antenna elements, and the number of Users:
-- `Main_Scale_M.m`: Scaling simulation on the number of RIS elements
-- `Main_Scale_K_User.m`: Scaling simulation on the number of users
-- `Main_Scale_Main.m` call both `Main_Scale_M.m` and `Main_Scale_K_User.m` 
-
-**Files involved:**
-- `Simulation_Scale.m`
-- `InitData_Scale.m`
-- `Model_Generation_Scale.m`
-
-#### Model_Generation_Scale.m
-Runs first. Creates a **CasADi model**.
-
-#### InitData_Scale.m
-Initializes for scaling cases (variable M or K).
-
-#### Simulation_Scale.m
-Executes simulation but without full MPC complexity.
-
->  **Important**: Scaling simulations **do NOT require** the full `Model_Generation.m`. They use the embedded model created by `Model_Generation_Scale`.
-
----
-
-## Communication Functions
-
-Located in `Functions/Communication_Functions/`
-
-| Function | Description |
-|----------|-------------|
-| `Setup_env.m` | Creates the environments RIS, users and antenna coordinates |
-| `array_response_phases_BS.m` | Compute the transmit array response of the BS |
-| `phase_array_response_RIS.m` | Compute the phase of the array response of RIS (transmit or received) |
-| `compute_aperture_gain_from_rotation.m` | Compute the aperture of RIS |
-| `Rates_No_Complex_phase.m` | Compute the rate of all users in the network |
-| `computeTotalRateAlongPath.m` | Compute the sumrate across a path |
-
-These handle:
-- RIS phase modeling
-- BS steering vectors
-- Channel/RIS gain modeling
-- Rate computation
-- Environment parameters
-
----
-
-## Correct Installation Procedure
-
-### STEP 1 — Install CasADi inside MATMPC
-
-1. Download CasADi for MATLAB from: https://web.casadi.org/get/
-2. Extract it
-3. Place the extracted folder in: `MATMPC/casadi/`
-4. Add to MATLAB path:
-   ```matlab
-   addpath(genpath('MATMPC/casadi'));
-   ```
-
-### STEP 2 — Replace the MATMPC example folder
-
-1. Delete: `MATMPC/examples/`
-2. Replace it by: `ARIS_Main/examples/`
-   → Rename ARIS example folder to **examples** and copy it into MATMPC
-
-### STEP 3 — Replace the MATMPC Functions folder
-
-1. Delete: `MATMPC/Functions/`
-2. Replace with ARIS version: `ARIS_Main/Functions/`
-
-### STEP 4 — Copy ARIS core files to the MATMPC root folder
-
-These files must overwrite any MATMPC versions:
-
-- `Simulation_Main.m`
-- `Simulation_Scale.m`
-- `Model_Generation.m`
-- `Model_Generation_Scale.m`
-- `InitData_Main.m`
-- `InitData_Scale.m`
-- `Draw.m`
-- `Draw_Main.m`
-- Any other ARIS `.m` file
-
-Every file with the same name should be **replaced**.
-
----
-
-## Running Simulations
-
-### 1 Full MPC Simulation (Main Engine)
-
-Run model generation:
 ```matlab
-Model_Generation
+% In MATLAB, set folder to: ARIS_Main/ARIS_Main
+addpath(genpath('Functions'));   % utilities for path, channel, rates, plotting
+Main                            % runs the scenario, saves results, and plots
 ```
 
-Then run simulation:
-```matlab
-Main
-```
-
-This performs:
-- UAV model initialization
-- MPC loop
-- HoT/NoT switching
-- Rate computation
-- Plotting
-
-### 2 Scaling Simulations
-
-**No model generation needed**, because model is already embedded.
-
-Run:
-```matlab
-Main_Scale_M
-Main_Scale_K_User
-Main_Scale_Main
-```
-
-These scripts:
-- Call `Model_Generation_Scale` internally
-- Then run `Simulation_Scale`
-- Do not require full dynamics
-- Are optimized for performance
+**Outputs**
+- Results file: `HoT_NoT_uMRAV_Both.mat`
+- Figures: generated automatically by `Draw_Main.m`
 
 ---
 
-## Summary Table
+## 2) Project Arborescence & One‑Line Explanations (UAV + Communication)
 
-| Engine | Needs Model Generation? | Simulation Function | Init Function | Model |
-|--------|------------------------|-------------------|---------------|-------|
-| **Main Simulation** | YES (`Model_Generation`) | `Simulation_Main` | `InitData_Main` | Full dynamics |
-| **Scale vs M/K** | NO | `Simulation_Scale` | `InitData_Scale` | Embedded model |
+```
+ARIS_Main/  — Project root (UAV + Communication focused)
+  CMoN_Init.m                               — General script/function
+  Draw.m                                   — Plot the results of the Simulation file 
+  Draw_Main.m                              — Compares NoT vs HoT runs; main plotting entry
+  InitData.m                               — Initializes simulation input/data from settings
+  InitData_ngrid.m                         — Grid-based data initialization
+  InitMemory.m                             — Prepares workspace memory structures
+  Initialization_Simulink.m                — Simulink environment initialization
+  Main.m                                   — Central scenario script (defines, runs, plots)
+  Model_Generation.m                       — Creates environment and geometric setup
+  Simulation.m                             — High-level UAV + communication simulation wrapper
+  qqs.m                                   — Auxiliary computation script
+  video_Maker.m                            — Generates animation/video of UAV trajectory
+  Functions/                               — Reusable components
+    Communication_Functions/               — Communication & RIS utilities
+      Rates_No_Complex_phase.m             — Per-step user rate computation
+      Setup_env.m                          — Defines frequency, power, bandwidth, path-loss
+      array_response_phases_BS.m           — BS steering vector generation
+      computeTotalRateAlongPath.m          — Integrates rate along UAV path
+      compute_aperture_gain_from_rotation.m— Computes gain from UAV orientation
+      phase_array_response_RIS.m           — RIS per-element phase response (Rx/Tx)
+    MATMPC_Functions/                      — Entry points used by Main.m
+      InitData_Main.m                      — Builds MATMPC-ready input/data from settings, path & weights
+      Simulation_Main.m                    — Runs the closed-loop simulation with horizon/weights/path
+    Robotic_Functions/                     — UAV trajectory & kinematic utilities
+      densifyToNs.m                        — Resamples path to `Ns` points (matches simulation steps)
+      smoothPath.m                         — Smooths UAV path to eliminate sharp turns
+      optimalTrajectoryPU.m                — Path planning maximizing proxy utility (rate proxy)
+      optimalTrajectoryRandomKNN.m         — Randomized KNN path planning variant
+      quaternion_geodesic_distance.m       — Attitude distance on SO(3)
+  data/                                   — Input and result data files
+  doc/                                    — Documentation
+  examples/                               — Usage examples / reference models
+    GTMR_4_com_soft.m                      — Example UAV+Comm model
+  mex_core/                               — MEX compilation utilities
+    Compile_Mex.m                          — Example compilation helper
+  model_src/                              — Model source definitions
+```
 
 ---
 
+## 3) Main Workflow — Where Each Piece Is Used (`Main.m`)
+
+1. **Initialization & Path**
+   - Adds `Functions/` to MATLAB path.
+   - Sets timing: `Ts_st`, `Tf_init`, `T_stabilization` and `Ns = Tf_init/Ts_st`.
+   - Builds UAV **proxy‑utility path**, then:
+     ```matlab
+     pathXY_ProxyUtility = densifyToNs(pathXY_ProxyUtility, Ns);
+     pathXY_ProxyUtility = smoothPath(pathXY_ProxyUtility, 150);
+     ```
+
+2. **Prepare Input/Data (MATMPC_Functions)**
+   - `InitData_Main.m` constructs MATMPC‑ready I/O from current settings, weights & path:
+     ```matlab
+     [input, data] = InitData_Main(settings, Ns, ...
+         q_sv, q_p, q_v, q_eul, q_omega, h_UAV, pathXY_ProxyUtility);
+     ```
+
+3. **Closed‑Loop Simulation (MATMPC_Functions)**
+   - `Simulation_Main.m` executes simulation for each mode (NoT / HoT) and returns trajectories:
+     ```matlab
+     [controls_*, state_*, time_*, data_*] = Simulation_Main( ...
+         settings, opt, N, Ns, q_sv, q_p, q_v, q_eul, q_omega, ...
+         h_UAV, pathXY_ProxyUtility, Tf_init, T_stabilization);
+     ```
+
+4. **Save & Plot**
+   - Saves to `.mat` and calls `Draw_Main` to produce figures.
+
+---
+
+## 4) Function Cards — Concise Purpose & Signature
+
+### A) **Functions/MATMPC_Functions/**
+- **InitData_Main.m** — _Builds MATMPC‑ready input/data from settings, weights & path_  
+  **Signature:**  
+  ```matlab
+  [input, data] = InitData_Main(settings, Ns, q_sv, q_p, q_v, q_eul, q_omega, h_UAV, pathXY)
+  ```
+
+- **Simulation_Main.m** — _Runs closed‑loop simulation (given horizon, weights, and path)_  
+  **Signature:**  
+  ```matlab
+  [controls_MPC, state_sim, time, data, ...] = Simulation_Main( ...
+      settings, opt, N, Ns, q_sv, q_p, q_v, q_eul, q_omega, ...
+      h_UAV, pathXY_ProxyUtility, Tf_init, T_stabilization)
+  ```
+
+### B) **Functions/Robotic_Functions/**
+
+- **optimalTrajectoryPU.m** — _Path planning maximizing a proxy‑utility (rate proxy)_  
+- **optimalTrajectoryRandomKNN.m** — _Randomized KNN path planning variant_  
+- **quaternion_geodesic_distance.m** — _Attitude distance on SO(3)_
+
+### C) **Functions/Communication_Functions/**
+- **Setup_env.m** — _Defines `freq`, `Power`, `Bandwidth`, `beta_B`, `beta_R`_  
+- **array_response_phases_BS.m** — _BS phase‑only steering vector_  
+- **phase_array_response_RIS.m** — _RIS per‑element phase response (Rx/Tx)_  
+- **Rates_No_Complex_phase.m** — _Per‑step user rate per UAV pose_  
+- **computeTotalRateAlongPath.m** — _Integrates rates along a full path_
+
+**Core evaluation example (without the MPC loop):**
+```matlab
+[totalRate, ratesVec] = computeTotalRateAlongPath(pathXY, h_UAV, ...
+    pA, pR, pK, R, Power, Bandwidth, freq, beta_B, beta_R);
+```
+
+---
+
+## 5) Key Parameters in `Main.m` (for quick edits)
+
+- **Timing:** `Tf_init`, `T_stabilization`, `Ts_st`  ⇒ `Ns = Tf_init/Ts_st`  
+- **Geometry:** `h_UAV`, path generator (PU vs KNN), smoothing window (e.g., 150)  
+- **Comms:** `freq`, `beta_B`, `beta_R`, `Power`, `Bandwidth`  
+- **RIS/BS:** size of `pR`/`pA`, RIS rotation `R`  
+- **Weights:** `q_eul`, `q_omega`, `q_p`, `q_v`, `q_sv`  (NoT vs HoT modes)
+
+---
+
+This HELP file intentionally stays focused on the **UAV + communication** logic and the **exact functions** `Main.m` relies on — including the two `MATMPC_Functions` you requested.
+
+
+---
+
+## 6) Additional Notes on Model Generation and Simulation
+
+- **examples/GTMR_4_com_soft.m** — contains the **quadrotor model** used in this project.  
+  It defines the UAV states, control inputs, dynamics, and output equations.
+
+- **Model_Generation.m** — must be **executed before running `Main.m` or `Simulation.m`**.  
+  It loads the chosen UAV model (e.g., GTMR_4_com_soft) and **generates the symbolic model** required for the simulations.
+
+- **Simulation.m** — corresponds to the **original MATMPC Simulation script**, with only a **reference trajectory section added** for **tracking experiments**.  
+  It has been modified to integrate your **UAV trajectory and RIS-assisted communication** logic.
+
+- **video_Maker.m**  **Generates animation/video of UAV trajectory of the UAV** simulated in **Simulation.m**
+
+---

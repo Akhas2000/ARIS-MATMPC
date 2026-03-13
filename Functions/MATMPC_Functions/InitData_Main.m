@@ -43,11 +43,11 @@ function [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_ome
             
             
 
-            %q_0=[q_p;q_p;q_p; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot;q_rot;q_rot;q_rot];
+            
             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
-            QN =    q_0;   
+            QN =    [q_p;q_p;q_h; q_v;q_v;q_v;zeros(K_User,1);q_omega;q_omega;q_omega;q_rot];   
             data.q_0=q_0;
             %% Bounds on states (none) and controls Ω_i ≥ 0
             lb_x = [-400;-400;-200;zeros(K_User,1)];

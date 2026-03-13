@@ -11,8 +11,8 @@ N = numel(PUvec);
 X = [x(:), y(:)];                       % N×2 coordinates
 
 % ---- nearest nodes to start/end ---------------------------------------
-[~,startNode] = min( sum((X - p_init ).^2, 2) );
-[~,endNode  ] = min( sum((X - p_final).^2, 2) );
+startNode = 1;
+endNode   = N;
 
 % ---- build k-NN graph --------------------------------------------------
 idx = knnsearch(X, X, 'K', k+1);        % self + k neighbours

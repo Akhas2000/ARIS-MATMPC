@@ -110,6 +110,7 @@ switch settings.model
         beta_R    = settings.beta_R;
         R_min     = settings.R_min;
         M_ele     = settings.M_ele;
+        K_User=settings.K_User;
         R   = eye(3);
 
         Ts = Ts; Tf = Tf;
@@ -225,9 +226,14 @@ switch settings.model
 
         figure; hold on;
         plot(time, v_mag, 'LineWidth',1.5,'DisplayName','V');
+        % plot(time, vx, 'LineWidth',1.5,'DisplayName','Vx');
+        % plot(time, vy, 'LineWidth',1.5,'DisplayName','Vy');
+        % plot(time, vz, 'LineWidth',1.5,'DisplayName','Vy');
         yline(v_min,'--k','LineWidth',1.5); yline(v_max,'--k','LineWidth',1.5);
         xlabel('Time (s)'); ylabel('Velocity (m/s)');
         legend('show'); grid on; hold off;
+
+
 
         %% --- Figure: Angular Velocities --------------------------------
         omega_sim = state_sim(:,11:13);
@@ -239,16 +245,33 @@ switch settings.model
         legend('show'); grid on; hold off;
 
         %% --- Figure: Rotor Speeds --------------------------------------
-        Omega_min = data.Omega_min; Omega_max = data.Omega_max;
+        % Omega_min = data.Omega_min; Omega_max = data.Omega_max;
+        % Omega_sim = controls_MPC;
+        % figure;
+        % for i = 1:4
+        %     subplot(4,1,i);
+        %     plot(time, Omega_sim(:,i),'LineWidth',1);
+        %     yline(Omega_min,'--k','LineWidth',1);
+        %     yline(Omega_max,'--k','LineWidth',1);
+        %     ylim([Omega_min-100, Omega_max+100]);
+        %     title(['\Omega_',num2str(i)]); ylabel('HoT (Hz^2)'); grid on;
+        % end
+        % xlabel('Time (s)');
+
+
+
+        Omega_min = data.Omega_min;
+        Omega_max = data.Omega_max;
         Omega_sim = controls_MPC;
+        
         figure;
         for i = 1:4
             subplot(4,1,i);
-            plot(time, Omega_sim(:,i),'LineWidth',1);
-            yline(Omega_min,'--k','LineWidth',1);
-            yline(Omega_max,'--k','LineWidth',1);
-            ylim([Omega_min-100, Omega_max+100]);
-            title(['\Omega_',num2str(i)]); ylabel('HoT (Hz^2)'); grid on;
+            plot(time, sqrt(Omega_sim(:,i)), 'LineWidth', 1.25);
+            yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5);
+            yline(sqrt(Omega_max), '--k', 'LineWidth', 1.5);
+            ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
+             ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
         end
         xlabel('Time (s)');
 
@@ -269,7 +292,126 @@ switch settings.model
         plot(time, yaw,'LineWidth',1.5,'DisplayName','Yaw (HoT)');
         xlabel('Time (s)'); ylabel('Euler Angles (deg)');
         legend('show'); grid on; hold off;
+    
 
+
+
+
+
+
+
+
+
+
+        %% ============================================================
+        %      OBJECTIVE DECOMPOSITION 
+        % ============================================================
+        
+        Q_vec = data.q_0;      % weight vector used in model
+        Q_diag = diag(Q_vec);
+        
+        % Extract signals
+        p     = state_sim(:,1:3);
+        v     = state_sim(:,8:10);
+        sv    = state_sim(:,14:13+K_User);
+        omega = state_sim(:,11:13);
+        q= state_sim(:,4:7);
+        q_ref=zeros(size(q,1),4);
+        q_ref(:,1)=1;
+
+        err_q = zeros(size(q,1),1);
+        for k = 1:length(err_q)
+            err_q(k) = quatGeodesicDistance(q(k,:).', q_ref(k,:).');
+        end
+        eta   = err_q;   % geodesic distance already computed
+        
+
+
+
+        % References
+        p_ref=zeros(size(p,1),3);
+        p_ref(:,1:2) = pathXY_ProxyUtility(1:size(p,1),:);  % p_ref(1:2)
+        p_ref(:,3)   = h_UAV*ones(size(p,1), 1);            % p_ref(3)
+
+        v_ref = zeros(size(v));
+        sv_ref = zeros(size(sv));
+        omega_ref = zeros(size(omega));
+        eta_ref = zeros(size(eta));
+        
+        % Errors
+        e_p     = p - p_ref;
+        e_v     = v - v_ref;
+        e_sv    = sv - sv_ref;
+        e_omega = omega - omega_ref;
+        e_eta   = eta - eta_ref;
+        
+        % Compute contributions
+        J_p     = 0.5 * sum((e_p.^2)     .* Q_vec(1:3)', 2);
+        J_v     = 0.5 * sum((e_v.^2)     .* Q_vec(4:6)', 2);
+        J_sv    = 0.5 * sum((e_sv.^2)    .* Q_vec(7:6+K_User)', 2);
+        J_omega = 0.5 * sum((e_omega.^2) .* Q_vec(7+K_User:9+K_User)', 2);
+        J_eta   = 0.5 * (e_eta.^2)       .* Q_vec(end);
+        
+        % Total cost
+        J_total = J_p + J_v + J_sv + J_omega + J_eta;
+
+
+
+        %% ============================================================
+        %      OBJECTIVE DECOMPOSITION — SUBPLOTS (HoT)
+        % ============================================================
+        
+        figure;
+        tiledlayout(6,1,'Padding','compact','TileSpacing','compact');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_p, 'b','LineWidth',1.5);
+        grid on;
+        ylabel('J_p');
+        title('Position Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_v, 'Color',[0.85 0.33 0.1],'LineWidth',1.5);
+        grid on;
+        ylabel('J_v');
+        title('Velocity Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_sv, 'm','LineWidth',1.5);
+        grid on;
+        ylabel('J_{sv}');
+        title('Slack (QoS) Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_omega, 'g','LineWidth',1.5);
+        grid on;
+        ylabel('J_\omega');
+        title('Angular Velocity Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_eta, 'k','LineWidth',1.5);
+        grid on;
+        ylabel('J_\eta');
+        title('Orientation (Geodesic) Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time, J_total, 'LineWidth',2);
+        grid on;
+        ylabel('J_{total}');
+        xlabel('Time (s)');
+        title('Total Objective');
+        
+        % Link all x-axes
+        ax = findall(gcf,'Type','axes');
+        linkaxes(ax,'x');
+
+    
     %% ===============================
     %  Simplified_UAV_Kinematic (Yaw-only)
     %  ===============================
@@ -280,4 +422,40 @@ switch settings.model
         % and same plots, naming them HoT.
         % (Omitted here for brevity — can expand if you want.)
         
+end
+
+
+
+%% Functions 
+
+function d = quatGeodesicDistance(q1, q2)
+% Geodesic distance between two UNIT quaternions q1 and q2
+% q = [w x y z]' (scalar-first convention)
+% Assumes q1 and q2 are already normalized
+
+    % Conjugate of q2
+    q2_conj = [q2(1); -q2(2:4)];
+
+    % Quaternion multiplication: q = q1 * q2*
+    q = quatMultiply(q1, q2_conj);
+
+    % Numerical clamp for safety
+    w = min(max(q(1), -1), 1);
+
+    % Geodesic distance = rotation angle between them
+    angle = acos(w);
+    d = 2 * angle;
+end
+
+%-------------------------------------
+% Quaternion multiplication
+%-------------------------------------
+function q = quatMultiply(q1, q2)
+    w1 = q1(1); v1 = q1(2:4);
+    w2 = q2(1); v2 = q2(2:4);
+
+    w = w1*w2 - dot(v1, v2);
+    v = w1*v2 + w2*v1 + cross(v1, v2);
+
+    q = [w; v];
 end

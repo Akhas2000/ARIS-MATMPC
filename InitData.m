@@ -42,7 +42,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
 
 
             q_rot=8; 
-            q_omega=2.5;
+            q_omega=35;
             q_sv=0.5*1e-11;
             q_p=6;
             q_h=10;
@@ -51,7 +51,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
              q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
-            QN =    q_0;   
+            QN =    [q_p;q_p;q_h; q_v;q_v;q_v;zeros(K_User,1);q_omega;q_omega;q_omega;q_rot];   
             data.q_0=q_0;
             %% Bounds on states (none) and controls Ω_i ≥ 0
             lb_x = [-400;-400;-200;zeros(K_User,1)];
@@ -64,48 +64,6 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             ub_gN= ub_g;
 
 
-      case 'Simplified_UAV_Kinematic'
-            %% Initial conditions
-            v_max=20;v_min=0;data.v_min=v_min;data.v_max=v_max;
-
-            theta_min=0;theta_max=2*pi; data.theta_min=theta_min;data.theta_max=theta_max;%rad/s
-
-            omega_min=-pi/2;omega_max=pi/2;data.omega_min=omega_min;data.omega_max=omega_max;%rad/s
-
-            K_User=settings.K_User;
-            % x_UAV, y_UAV, z_UAV, theta, sv
-            input.x0 = [ pathXY(1,1);pathXY(1,2);h_UAV;   ...  % p start
-                         0;   ...  % theta start
-                         sqrt(1e+8)*ones(K_User,1) ... % sv start
-                         
-                         ];   
-            % v, u, omega, sv_dot
-            input.u0 = [0;0;0;ones(K_User,1)];      % v, u, omega, sv_dot
-            input.z0 = zeros(nz,1);
-            para0   = zeros(np,1);
-
-
-            %% Weights
-            
-            q_yaw=0.5;
-            q_sv=0.5*1e-11;
-            q_p=5;
-            
-            %h = [x_UAV; y_UAV; z_UAV; theta; sv];
-            q_0=[q_p;q_p;q_p; q_yaw; q_sv*ones(K_User,1)];
-            
-            Q  = repmat(q_0,1,N);
-            QN =    q_0;   
-            data.q_0=q_0;
-            %% Bounds on states (none) and controls Ω_i ≥ 0
-            lb_x = [-400;-400;-200;theta_min;zeros(K_User,1)];% x_UAV, y_UAV, z_UAV, theta, sv
-            ub_x = [400;400;200;theta_max;inf*ones(K_User,1)];% x_UAV, y_UAV, z_UAV, theta, sv
-            lb_u = [v_min;-v_max;omega_min];% v, u, omega
-            ub_u = [v_max;v_max;omega_max];% v, u, omega
-            lb_g = zeros(K_User,1);
-            ub_g = inf*ones(K_User,1);
-            lb_gN= lb_g;
-            ub_gN= ub_g;
 
 
 
@@ -177,13 +135,6 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             data.REF(:,6+K_User+3+1) = repmat(geosedic_ref, Ns, 1);   % geosedic_ref:Ns x 1 matrix
         
 
-        case 'Simplified_UAV_Kinematic'
-            %h = [x_UAV; y_UAV; z_UAV; theta; sv];
-            data.REF        = zeros(Ns, ny);
-            data.REF(:,1:2) = pathXY;%p_ref(1:2)
-            data.REF(:,3) = h_UAV*ones(Ns, 1);%p_ref(3)
-            data.REF(:,4) = zeros(Ns, 1);%theta_ref
-            data.REF(:,5:4+K_User) = zeros(Ns, K_User);%sv_ref
 
 
 

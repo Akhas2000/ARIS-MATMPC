@@ -1,4 +1,4 @@
-function [controls_MPC, state_sim, time, data]  = Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization)
+function [controls_MPC, state_sim, time, data]  = Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init)
 
 Ts = settings.Ts_st;     % Closed-loop sampling time (usually = shooting interval)
 
@@ -29,7 +29,7 @@ end
 mem = InitMemory(settings, opt, input);
 
 %% Simulation (start your simulation...)
-Tf=Tf_init+T_stabilization;
+Tf=Tf_init;
 mem.iter = 1; time = 0.0;
 
 t_mpc=Ts*1;

@@ -3,7 +3,6 @@ clear all; clear mex; close all;clc;
 % Add the path to the functions
 addpath(genpath('Functions'));
 
-
 disp( ' ' );
 disp( 'MATMPC -- A (MAT)LAB based Model(M) Predictive(P) Control(C) Package.' );
 disp( 'Copyright (C) 2016-2019 by Yutao Chen, University of Padova' );
@@ -42,7 +41,6 @@ else
     error('No setting data is detected!');
 end
 
-
 Ts = settings.Ts_st;     % Closed-loop sampling time (usually = shooting interval)
 
 Ts_st = settings.Ts_st;  % Shooting interval
@@ -56,25 +54,10 @@ ncN = settings.ncN;  % No. of constraints at terminal stage
 nbx = settings.nbx;  % No. of state bounds
 
 
+
 %% solver configurations
 
-%% available qpsolver
-
-%'qpoases' (condensing is needed)
-%'qpoases_mb' (move blocking strategy)
-%'quadprog_dense' (for full condensing)
-%'hpipm_sparse' (run mex_core/compile_hpipm.m first; set opt.condensing='no')
-%'hpipm_pcond' (run mex_core/compile_hpipm.m first; set opt.condensing='no')
-%'ipopt_dense' (install OPTI Toolbox first; for full condensing)
-%'ipopt_sparse' (install OPTI Toolbox first; set opt.condensing='no')
-%'ipopt_partial_sparse'(set opt.condensing='partial_condensing'; only for state and control bounded problems)
-%'osqp_sparse' (set opt.condensing='no')
-%'osqp_partial_sparse' (set opt.condensing='partial_condensing')
-%'qpalm_cond' (condensing is needed)
-%'qpalm_sparse'(set opt.condensing='no')
-
-
-N  = 30;             % No. of shooting points
+N  = 60;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -96,18 +79,32 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 
 
 
-%% Simulation Duration
-Tf_init =27;  % simulation time
-T_stabilization=8;
-Tf=Tf_init+T_stabilization;
+%% available qpsolver
 
-%% Reference Trajectory Generation
+%'qpoases' (condensing is needed)
+%'qpoases_mb' (move blocking strategy)
+%'quadprog_dense' (for full condensing)
+%'hpipm_sparse' (run mex_core/compile_hpipm.m first; set opt.condensing='no')
+%'hpipm_pcond' (run mex_core/compile_hpipm.m first; set opt.condensing='no')
+%'ipopt_dense' (install OPTI Toolbox first; for full condensing)
+%'ipopt_sparse' (install OPTI Toolbox first; set opt.condensing='no')
+%'ipopt_partial_sparse'(set opt.condensing='partial_condensing'; only for state and control bounded problems)
+%'osqp_sparse' (set opt.condensing='no')
+%'osqp_partial_sparse' (set opt.condensing='partial_condensing')
+%'qpalm_cond' (condensing is needed)
+%'qpalm_sparse'(set opt.condensing='no')
 
-%% ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
+
+%% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
+
+% Simulation Duration
+Tf_init =45;  % simulation time
+
+% ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
 ymin = -200;  ymax =  200;            % [m] rectangle in y
 h_UAV = 100;                          % [m] fixed altitude
-Nrand = 20000;                        % << huge number of random nodes
+Nrand = 30000;                        % << huge number of random nodes
 
 R = eye(3);                           % rotation (identity)
 pA=settings.pA; 
@@ -126,20 +123,26 @@ y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node
 Proxy_Utility_mat   = zeros(1,Nrand);                     % Σ-rate per node
 
+% ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
+p_init  =  [-100 -100];         % start (physical coordinate)
+p_final = [ -100   100];      % destination
+
+x_vals(1)=p_init(1);x_vals(Nrand)=p_final(1);
+y_vals(1)=p_init(2);y_vals(Nrand)=p_final(2);
 % ---------- RATE CALCULATION ------------------------------------------
 for n = 1:Nrand
     pU = [x_vals(n), y_vals(n), h_UAV];
 
-    f_phases  = array_response_phases_BS(pA,pU,freq);  
+    % f_phases  = array_response_phases_BS(pA,pU,freq);  
+    % 
+    % P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
+    % P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
+    % theta      = P_A_tx_RIS - P_A_rx_RIS;
 
-    P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
-    P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
-    theta      = P_A_tx_RIS - P_A_rx_RIS;
-
-    Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
-                                  f_phases,Power,Bandwidth,freq,...
-                                  beta_B,beta_R);
-    Rmat(n)    = sum(Rates);
+    % Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
+    %                               f_phases,Power,Bandwidth,freq,...
+    %                               beta_B,beta_R);
+    %Rmat(n)    = sum(Rates);
 
     % Proxy Utility
     norm_diff = norm(pU - p_bar_User);
@@ -147,32 +150,52 @@ for n = 1:Nrand
     Proxy_Utility_mat(n) = (norm_diff*norm_self)^8;
 end
 
+
+
+
 % ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
-p_init  =  [-100 -100];         % start (physical coordinate)
-p_final = [ -100   100];      % destination
+
+[pathXY] = optimalTrajectoryPU( ...
+    Proxy_Utility_mat, x_vals, y_vals, ...
+    p_init, p_final, ...
+    'k', 8);
+
+% ---- STEP 1: Smooth geometrically (no time yet) ----
+Ns = floor(Tf_init / Ts_st);
 
 
-[pathXY_ProxyUtility] = optimalTrajectoryPU( ...
-                           Proxy_Utility_mat, x_vals, y_vals, ...
-                           p_init, p_final, ...
-                           'k', 8);            % 8-nearest neighbours
+% ---- STEP 2: Zero-order hold in time ----
 
+Nw = size(pathXY,1);
 
-Ns = Tf_init/Ts_st;                           % pick any integer ≥ size(pathXY,1)
-pathXY_ProxyUtility= densifyToNs(pathXY_ProxyUtility, Ns);
+samples_per_wp = floor(Ns / Nw);
 
-N_stabilization=N+T_stabilization/Ts_st;
-X_end=pathXY_ProxyUtility(end,1);
-Y_end=pathXY_ProxyUtility(end,2);
-for p_iter=0:N_stabilization
-    pathXY_ProxyUtility=[pathXY_ProxyUtility;X_end,Y_end];
+pathZOH = [];
+
+for i = 1:Nw
+    block = repmat(pathXY(i,:), samples_per_wp, 1);
+    pathZOH = [pathZOH; block];
 end
-pathXY_ProxyUtility = smoothPath(pathXY_ProxyUtility, 150);
-Ns=size(pathXY_ProxyUtility,1);
+
+% pad if necessary
+while size(pathZOH,1) < Ns
+    pathZOH = [pathZOH; pathXY(end,:)];
+end
+
+pathXY_ProxyUtility = pathZOH;
+% ---- extend reference for preview safety ----
+last_point = pathXY_ProxyUtility(end,:);
+
+for i = 1:N
+    pathXY_ProxyUtility = [pathXY_ProxyUtility; last_point];
+end
 
 
+
+Ns = size(pathXY_ProxyUtility,1);
 
 % -------- NoT : No orientation Tracking --------
+
 
 q_rot=0; 
 q_omega=0;
@@ -181,23 +204,22 @@ q_p=6;
 q_h=10;
 q_v=0.9;
 
-
-
 [controls_NoT, state_NoT, time_NoT, data_NoT] = ...
     Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
-                    h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
+                    h_UAV,pathXY_ProxyUtility,Tf_init);
 
 % -------- HoT : Horizontal orientation Tracking--------
-
 q_rot=8; 
-q_omega=2.5;
+q_omega=35;
 q_sv=0.5*1e-11;
 q_p=6;
 q_h=10;
 q_v=0.9;
+
+
 [controls_HoT, state_HoT, time_HoT, data_HoT] = ...
     Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
-                    h_UAV,pathXY_ProxyUtility,Tf_init,T_stabilization);
+                    h_UAV,pathXY_ProxyUtility,Tf_init);
 
 save("HoT_NoT_uMRAV_Both.mat")
 Draw_Main;

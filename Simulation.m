@@ -57,7 +57,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 30;             % No. of shooting points
+N  = 60;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -98,14 +98,13 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
 
 % Simulation Duration
-Tf_init =27;  % simulation time
-T_stabilization=8;% Additional time given to allow the position, orientation, velocity and angular velocity to reach the final desired value
+Tf_init =45;  % simulation time
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
 ymin = -200;  ymax =  200;            % [m] rectangle in y
 h_UAV = 100;                          % [m] fixed altitude
-Nrand = 20000;                        % << huge number of random nodes
+Nrand = 30000;                        % << huge number of random nodes
 
 R = eye(3);                           % rotation (identity)
 pA=settings.pA; 
@@ -124,20 +123,26 @@ y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node
 Proxy_Utility_mat   = zeros(1,Nrand);                     % Σ-rate per node
 
+% ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
+p_init  =  [-100 -100];         % start (physical coordinate)
+p_final = [ -100   100];      % destination
+
+x_vals(1)=p_init(1);x_vals(Nrand)=p_final(1);
+y_vals(1)=p_init(2);y_vals(Nrand)=p_final(2);
 % ---------- RATE CALCULATION ------------------------------------------
 for n = 1:Nrand
     pU = [x_vals(n), y_vals(n), h_UAV];
 
-    f_phases  = array_response_phases_BS(pA,pU,freq);  
+    % f_phases  = array_response_phases_BS(pA,pU,freq);  
+    % 
+    % P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
+    % P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
+    % theta      = P_A_tx_RIS - P_A_rx_RIS;
 
-    P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
-    P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
-    theta      = P_A_tx_RIS - P_A_rx_RIS;
-
-    Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
-                                  f_phases,Power,Bandwidth,freq,...
-                                  beta_B,beta_R);
-    Rmat(n)    = sum(Rates);
+    % Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
+    %                               f_phases,Power,Bandwidth,freq,...
+    %                               beta_B,beta_R);
+    %Rmat(n)    = sum(Rates);
 
     % Proxy Utility
     norm_diff = norm(pU - p_bar_User);
@@ -145,27 +150,49 @@ for n = 1:Nrand
     Proxy_Utility_mat(n) = (norm_diff*norm_self)^8;
 end
 
+
+
+
 % ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
-p_init  =  [-100 -100];         % start (physical coordinate)
-p_final = [ -100   100];      % destination
+
+[pathXY] = optimalTrajectoryPU( ...
+    Proxy_Utility_mat, x_vals, y_vals, ...
+    p_init, p_final, ...
+    'k', 8);
+
+% ---- STEP 1: Smooth geometrically (no time yet) ----
+Ns = floor(Tf_init / Ts_st);
 
 
-[pathXY_ProxyUtility] = optimalTrajectoryPU( ...
-                           Proxy_Utility_mat, x_vals, y_vals, ...
-                           p_init, p_final, ...
-                           'k', 8);            % 8-nearest neighbours
+% ---- STEP 2: Zero-order hold in time ----
 
-Ns = Tf_init/Ts_st;                           % pick any integer ≥ size(pathXY,1)
-pathXY_ProxyUtility= densifyToNs(pathXY_ProxyUtility, Ns);
+Nw = size(pathXY,1);
 
-N_stabilization=N+T_stabilization/Ts_st;
-X_end=pathXY_ProxyUtility(end,1);
-Y_end=pathXY_ProxyUtility(end,2);
-for p_iter=0:N_stabilization
-    pathXY_ProxyUtility=[pathXY_ProxyUtility;X_end,Y_end];
+samples_per_wp = floor(Ns / Nw);
+
+pathZOH = [];
+
+for i = 1:Nw
+    block = repmat(pathXY(i,:), samples_per_wp, 1);
+    pathZOH = [pathZOH; block];
 end
-pathXY_ProxyUtility = smoothPath(pathXY_ProxyUtility, 150);
-Ns=size(pathXY_ProxyUtility,1);
+
+% pad if necessary
+while size(pathZOH,1) < Ns
+    pathZOH = [pathZOH; pathXY(end,:)];
+end
+
+pathXY_ProxyUtility = pathZOH;
+% ---- extend reference for preview safety ----
+last_point = pathXY_ProxyUtility(end,:);
+
+for i = 1:N
+    pathXY_ProxyUtility = [pathXY_ProxyUtility; last_point];
+end
+
+
+
+Ns = size(pathXY_ProxyUtility,1);
 
 % End of the reference trajectory generation
 
@@ -183,7 +210,7 @@ end
 mem = InitMemory(settings, opt, input);
 
 %% Simulation (start your simulation...)
-Tf=Tf_init+T_stabilization;
+Tf=Tf_init;
 mem.iter = 1; time = 0.0;
 
 t_mpc=Ts*1;

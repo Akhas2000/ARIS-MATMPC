@@ -1,7 +1,7 @@
 clear all; clear mex; close all; clc;
 
 %% Parameters
-K_User = 6;                 % Fixed number of users
+K_User = 5;                 % Fixed number of users
 N_A    = 3;                 % Antenna elements
 N_iter = 5;                 % Number of random realizations
 
@@ -77,8 +77,8 @@ end
 figure; hold on; grid on; box on;
 
 plot(M_rows*M_size(2), Tot_HoT_BP,'-o','LineWidth',1.5,'DisplayName','HoT-BP');
-plot(M_rows*M_size(2), Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
 plot(M_rows*M_size(2), Tot_NoT_BP,'-s','LineWidth',1.5,'DisplayName','NoT-BP');
+plot(M_rows*M_size(2), Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
 plot(M_rows*M_size(2), Tot_NoT_P, '-v','LineWidth',1.5,'DisplayName','NoT-P');
 plot(M_rows*M_size(2), Tot_HoT_B, '-d','LineWidth',1.5,'DisplayName','HoT-B');
 plot(M_rows*M_size(2), Tot_NoT_B, '-x','LineWidth',1.5,'DisplayName','NoT-B');

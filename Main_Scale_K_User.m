@@ -73,8 +73,8 @@ figure; hold on; grid on; box on;
 
 
 plot(K_set, Tot_HoT_BP,'-o','LineWidth',1.5,'DisplayName','HoT-BP');
-plot(K_set, Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
 plot(K_set, Tot_NoT_BP,'-s','LineWidth',1.5,'DisplayName','NoT-BP');
+plot(K_set, Tot_HoT_P, '-^','LineWidth',1.5,'DisplayName','HoT-P');
 plot(K_set, Tot_NoT_P, '-v','LineWidth',1.5,'DisplayName','NoT-P');
 plot(K_set, Tot_HoT_B, '-d','LineWidth',1.5,'DisplayName','HoT-B');
 plot(K_set, Tot_NoT_B, '-x','LineWidth',1.5,'DisplayName','NoT-B');

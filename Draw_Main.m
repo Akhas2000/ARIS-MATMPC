@@ -25,7 +25,7 @@ switch settings.model
         %  PLOT RESULTS (NoT vs HoT)
         %  ============================
 
-
+        Tf=Tf_init;
         % Short-hands from settings
         pA        = settings.pA;
         pR        = settings.pR;
@@ -37,7 +37,7 @@ switch settings.model
         R_min     = settings.R_min;
         M_ele     = settings.M_ele;
         N_A       = settings.N_A;
-        
+        K_User=settings.K_User;
         %% ------------------------------------------
         %  (Optional) Figure 1: Reference rate field
         %  ------------------------------------------
@@ -317,7 +317,64 @@ switch settings.model
         yline(R_min, '--k', 'LineWidth', 2, 'DisplayName', 'R_{min}');
         xlabel('Time (s)'); ylabel('User data rate (bit/s)');
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
+
+
+        %% ------------------------------------------
+        %  Figure 3: Average User Rate (Mean only)
+        %  ------------------------------------------
         
+        % Time vector
+        t = time_draw(2:end);
+        t = t(:);   % ensure column
+        
+        % Statistics (mean only)
+        mean_HoT = mean(RATES_HoT, 2);
+        mean_NoT = mean(RATES_NoT, 2);
+        
+        mean_HoT = mean_HoT(:);
+        mean_NoT = mean_NoT(:);
+        
+        % Define colors (safe MATLAB defaults)
+        blue = [0 0.4470 0.7410];
+        red  = [0.8500 0.3250 0.0980];
+        
+        figure; 
+        hold on; 
+        box on;
+        
+        % =========================
+        % HoT
+        % =========================
+        h1 = plot(t, mean_HoT, ...
+         'Color', blue, ...
+         'LineWidth', 2);
+        
+        % =========================
+        % NoT
+        % =========================
+        h2 = plot(t, mean_NoT, ...
+         'Color', red, ...
+         'LineWidth', 2);
+        
+        % =========================
+        % QoS line
+        % =========================
+        h3 = yline(R_min,'--k','LineWidth',2);
+        
+        xlabel('Time (s)','FontSize',12);
+        ylabel('Average user rate (bit/s)','FontSize',12);
+        
+        grid on;
+        set(gca,'FontSize',11);
+        
+        legend([h1 h2 h3], ...
+           {'HoT (Average)', ...
+            'NoT (Average)', ...
+            'R_{min}'}, ...
+           'Location','northoutside','NumColumns',3);
+        
+        hold off;
+
         %% ------------------------------------------
         %  Figure 4: Total network rate (schemes)
         %  ------------------------------------------
@@ -462,10 +519,10 @@ switch settings.model
         %% ============================================================
         %          BUILD REFERENCE STATE
         % ============================================================
-        state_ref=zeros(Ns-N,13);
-        state_ref(:,1:2) = pathXY_ProxyUtility(1:Ns-N,:);  % p_ref(1:2)
-        state_ref(:,3)   = h_UAV*ones(Ns-N, 1);            % p_ref(3)
-        state_ref(:,4)   = 1*ones(Ns-N, 1);                % q_ref = [1 0 0 0]
+        state_ref=zeros(size(time_HoT,2),13);
+        state_ref(:,1:2) = pathXY_ProxyUtility(1:size(time_HoT,2),:);  % p_ref(1:2)
+        state_ref(:,3)   = h_UAV*ones(size(time_HoT,2), 1);            % p_ref(3)
+        state_ref(:,4)   = 1*ones(size(time_HoT,2), 1);                % q_ref = [1 0 0 0]
         % v_ref, w_ref = 0
         
         p_ref = state_ref(:,1:3);
@@ -561,8 +618,101 @@ switch settings.model
         xlabel('Time (s)');
         %legend('show');
 
+        %% ============================================================
+        %      OBJECTIVE DECOMPOSITION — HoT
+        % ============================================================
+        
+        Q_vec = data_HoT.q_0;      % weight vector used in model
+        Q_diag = diag(Q_vec);
+        
+        % Extract signals
+        p     = p_HoT;
+        v     = v_HoT;
+        sv    = state_HoT(:,14:13+K_User);
+        omega = w_HoT;
+        eta   = err_q_HoT;   % geodesic distance already computed
+        
+        % References
+        p_ref = state_ref(:,1:3);
+        v_ref = zeros(size(v));
+        sv_ref = zeros(size(sv));
+        omega_ref = zeros(size(omega));
+        eta_ref = zeros(size(eta));
+        
+        % Errors
+        e_p     = p - p_ref;
+        e_v     = v - v_ref;
+        e_sv    = sv - sv_ref;
+        e_omega = omega - omega_ref;
+        e_eta   = eta - eta_ref;
+        
+        % Compute contributions
+        J_p     = 0.5 * sum((e_p.^2)     .* Q_vec(1:3)', 2);
+        J_v     = 0.5 * sum((e_v.^2)     .* Q_vec(4:6)', 2);
+        J_sv    = 0.5 * sum((e_sv.^2)    .* Q_vec(7:6+K_User)', 2);
+        J_omega = 0.5 * sum((e_omega.^2) .* Q_vec(7+K_User:9+K_User)', 2);
+        J_eta   = 0.5 * (e_eta.^2)       .* Q_vec(end);
+        
+        % Total cost
+        J_total = J_p + J_v + J_sv + J_omega + J_eta;
 
 
+
+
+        
+        %% ============================================================
+        %      OBJECTIVE DECOMPOSITION — SUBPLOTS (HoT)
+        % ============================================================
+        
+        figure;
+        tiledlayout(6,1,'Padding','compact','TileSpacing','compact');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_p, 'b','LineWidth',1.5);
+        grid on;
+        ylabel('J_p');
+        title('Position Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_v, 'Color',[0.85 0.33 0.1],'LineWidth',1.5);
+        grid on;
+        ylabel('J_v');
+        title('Velocity Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_sv, 'm','LineWidth',1.5);
+        grid on;
+        ylabel('J_{sv}');
+        title('Slack (QoS) Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_omega, 'g','LineWidth',1.5);
+        grid on;
+        ylabel('J_\omega');
+        title('Angular Velocity Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_eta, 'k','LineWidth',1.5);
+        grid on;
+        ylabel('J_\eta');
+        title('Orientation (Geodesic) Contribution');
+        
+        % ------------------------------------------------------------
+        nexttile;
+        plot(time_HoT, J_total, 'LineWidth',2);
+        grid on;
+        ylabel('J_{total}');
+        xlabel('Time (s)');
+        title('Total Objective');
+        
+        % Link all x-axes
+        ax = findall(gcf,'Type','axes');
+        linkaxes(ax,'x');
 
 end
 
@@ -602,4 +752,3 @@ function q = quatMultiply(q1, q2)
 
     q = [w; v];
 end
-

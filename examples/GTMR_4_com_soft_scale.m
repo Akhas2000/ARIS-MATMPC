@@ -43,7 +43,7 @@ nbx_idx = [1:3,14:13+K_User];
 
 
 %% create variables
-addpath('/home/abdoul/Desktop/Matlab_Sims/ARIS_Traj_Opt/ARIS_Main/Casadi');
+addpath('/home/abdoul/Desktop/Matlab_Sims/ARIS_Traj_Opt/ARIS_Main_Geosedic_correct/Casadi');
 import casadi.*
 
 
@@ -233,7 +233,7 @@ general_con_N = general_con;
 
 
 %% discretization
-Ts_st = 0.01;
+Ts_st = 0.05;
 
 
 %% Functions 

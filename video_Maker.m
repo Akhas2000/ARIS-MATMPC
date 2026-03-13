@@ -8,12 +8,12 @@
 % - Tf         [scalar]  (desired video duration in seconds)
 
 %% Put NoT for the NoT scheme and HoT for the HoT one
-state_sim=state_NoT;
+state_sim=state_HoT;
 pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
 
 %% === SETTINGS ===
 frameRate = 15;                       
-video_filename = 'UAV_Flight_Trajectory_NoT.avi';
+video_filename = 'UAV_Flight_Trajectory_HoT.avi';
 
 %% === Compute Frame Sampling Step ===
 N = size(state_sim, 1);

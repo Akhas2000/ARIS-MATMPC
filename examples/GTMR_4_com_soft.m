@@ -231,7 +231,7 @@ general_con_N = general_con;
 
 
 %% discretization
-Ts_st = 0.01;
+Ts_st = 0.05;
 
 
 %% Functions 
