@@ -34,9 +34,9 @@ switch settings.model
         num_users = size(pK, 2);
         for kUser = 1:num_users
             if kUser == 1
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 100, 'ro','filled', 'DisplayName','Users');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'DisplayName','Users');
             else
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 100, 'ro','filled', 'HandleVisibility','off');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'HandleVisibility','off');
             end
         end
         
