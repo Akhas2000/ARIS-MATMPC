@@ -59,7 +59,7 @@ switch settings.model
         
             % BS + users + planned path
             p_bs = plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');             % BS
-            p_us = plot(pK(1,:), pK(2,:), 'ro','MarkerSize',10,'MarkerFaceColor','r');% users
+            p_us = plot(pK(1,:), pK(2,:), 'ro','MarkerSize',5,'MarkerFaceColor','r');% users
             p_pt = plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth',2);                % path
             plot(pathXY(1,1), pathXY(1,2), 'rs','MarkerFaceColor','r','HandleVisibility', 'off');        % start
             plot(pathXY(end,1), pathXY(end,2),'rd','MarkerFaceColor','r','HandleVisibility', 'off');     % finish
@@ -109,9 +109,9 @@ switch settings.model
         num_users = size(pK, 2);
         for kUser = 1:num_users
             if kUser == 1
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 100, 'ro','filled', 'DisplayName','Users');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'DisplayName','Users');
             else
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 100, 'ro','filled', 'HandleVisibility','off');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'HandleVisibility','off');
             end
         end
         
