@@ -493,12 +493,75 @@ switch settings.model
             plot(t_plot, TD_HoT(:, user), ...
                 'LineWidth',1.5, 'LineStyle','-', 'DisplayName',['Data-HoT ',num2str(user)]);
             plot(t_plot, TD_NoT(:, user), ...
-                'LineWidth',1.5, 'LineStyle','-.',  'DisplayName',['Data-NoT ',num2str(user)]);
+                'LineWidth',1.25, 'LineStyle','--',  'DisplayName',['Data-NoT ',num2str(user)]);
 
         end
         yline(R_min * Tf, '--k', 'LineWidth', 2, 'DisplayName', 'R_{min}\cdot T_f');
         xlabel('Time (s)'); ylabel('Transmitted data (bit)');
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
+
+        %% Compute statistics across users
+        mean_HoT = mean(TD_HoT, 2);
+        std_HoT  = std(TD_HoT, 0, 2);
+        
+        mean_NoT = mean(TD_NoT, 2);
+        std_NoT  = std(TD_NoT, 0, 2);
+        
+        % Plot
+        figure;
+        hold on;
+        box on;
+        
+        % HoT variability
+        hShadeHoT = fill(...
+            [t_plot; flipud(t_plot)], ...
+            [mean_HoT-std_HoT; flipud(mean_HoT+std_HoT)], ...
+            [0 0.4470 0.7410], ...
+            'FaceAlpha',0.2, ...
+            'EdgeColor','none', ...
+            'DisplayName','HoT ±1 std');
+        
+        % NoT variability
+        hShadeNoT = fill(...
+            [t_plot; flipud(t_plot)], ...
+            [mean_NoT-std_NoT; flipud(mean_NoT+std_NoT)], ...
+            [0.8500 0.3250 0.0980], ...
+            'FaceAlpha',0.2, ...
+            'EdgeColor','none', ...
+            'DisplayName','NoT ±1 std');
+        
+        % Mean curves
+        hMeanHoT = plot(t_plot, mean_HoT, ...
+            'b-', 'LineWidth',2.5, ...
+            'DisplayName','Mean HoT');
+        
+        hMeanNoT = plot(t_plot, mean_NoT, ...
+            'r--', 'LineWidth',2.5, ...
+            'DisplayName','Mean NoT');
+        
+        % Threshold
+        hThr = yline(R_min*Tf, '--k', ...
+            'LineWidth',2, ...
+            'DisplayName','R_{min} T_f');
+        
+        % Labels
+        xlabel('Time (s)');
+        ylabel('Transmitted data (bit)');
+        
+        % Legend
+        legend([hShadeHoT hShadeNoT hMeanHoT hMeanNoT hThr], ...
+            {'HoT ±1 std', ...
+             'NoT ±1 std', ...
+             'Mean HoT', ...
+             'Mean NoT', ...
+             'R_{min} T_f'}, ...
+            'Location','northoutside', ...
+            'NumColumns',3);
+        
+        grid on;
+        set(gca,'FontSize',12);
+        
+        hold off;
         
         %% ------------------------------------------
         %  Figure 7: Cumulative network data (schemes)
@@ -512,7 +575,7 @@ switch settings.model
         
         figure; hold on;
         Trans_HOV_BP = cumsum(Total_HOV_BP) * Ts;
-        plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
+       % plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
 
         plot(t_plot, Trans_HoT_BP, 'b-', 'LineWidth',1.5, 'DisplayName','HoT-BP');
         plot(t_plot, Trans_NoT_BP, 'b--',  'LineWidth',1.5, 'DisplayName','NoT-BP');
@@ -896,10 +959,12 @@ switch settings.model
         % Extract slack variables from the control matrices
         slack_HoT_all = controls_HoT(:, 5:4+K_User);
         slack_NoT_all = controls_NoT(:, 5:4+K_User);
+        slack_SL_all = controls_SL(:, 5:4+K_User);
         
         % Compute average across all users at each time step
         mean_slack_HoT = mean(slack_HoT_all, 2);
         mean_slack_NoT = mean(slack_NoT_all, 2);
+        mean_slack_SL = mean(slack_SL_all, 2);
         
         figure; 
         hold on; 
@@ -920,21 +985,29 @@ switch settings.model
              'Color', orange, ...
              'LineWidth', 1.5, ...
              'LineStyle', '--');
-             
-        % Re-plot HoT on top to ensure it is clearly visible
-        plot(time_HoT, mean_slack_HoT, ...
-             'Color', blue, ...
+
+        % =========================
+        % SL Average Slack
+        % =========================
+        h_slack_sl = plot(time_SL, mean_slack_SL, ...
+             'Color', green, ...
              'LineWidth', 1.5, ...
-             'LineStyle', '-');
+             'LineStyle', '-.');
              
+        % % Re-plot HoT on top to ensure it is clearly visible
+        % plot(time_HoT, mean_slack_HoT, ...
+        %      'Color', blue, ...
+        %      'LineWidth', 1.5, ...
+        %      'LineStyle', '-');
+        % 
         xlabel('Time (s)', 'FontSize', 12);
         ylabel('Average Slack Variable', 'FontSize', 12);
         
         grid on;
         
         % Add Legend
-        legend([h_slack_hot, h_slack_not], ...
-               {'HoT (Average Slack)', 'NoT (Average Slack)'}, ...
+        legend([h_slack_hot, h_slack_not, h_slack_sl], ...
+               {'HoT (Average Slack)', 'NoT (Average Slack)','SL (Average Slack)'}, ...
                'Location', 'northoutside', 'NumColumns', 2);
                
         hold off;
@@ -953,7 +1026,7 @@ switch settings.model
         end
         
         xlabel('Time (s)');
-        ylabel('Violation depth (bit/s)');
+        ylabel('Violation depth HoT (bit/s)');
         
         legend show;
         grid on;
