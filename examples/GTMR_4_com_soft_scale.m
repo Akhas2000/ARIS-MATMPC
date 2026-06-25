@@ -14,7 +14,7 @@ N_A    = settings.N_A;
 M_size = settings.M_size;
 
 
-
+R_min=settings.R_min;
 
 M_ele = M_size(1) * M_size(2); % RIS elements
 
@@ -23,27 +23,26 @@ beta_dB = -30;
 beta_B = 10^(beta_dB / 10);
 beta_R = 10^(beta_dB / 10);
 
-R_min=2*10^6;
 
 
 %% Dimensions
-nx   = 13+K_User;   % p(3), q(4), v(3), ω(3),sv1,...,svKUser
-nu   = 4+K_User;    % thrust and torques Omega1,...,Omega4,sv1_dot,...,svKUser_dot
+nx   = 13;   % p(3), q(4), v(3), ω(3)
+nu   = 4+K_User;    % thrust and torques Omega1,...,Omega4,sv1,...,svKUser
 nz   = 0;
 ny   = 6+K_User+3+1;    % outputs: p(3), v(3),omega(3), sv1,...,svKUser, omega(3), geosedic_dist(1)
-nyN  = 6+K_User+3+1;    % terminal outputs: p(3), v(3), sv1,...,svKUser, omega(3), geosedic_dist(1)
-np   = 0;    % no online parameters
+nyN  = 6+3+1;    % terminal outputs: p(3), v(3), geosedic_dist(1)
+np   = M_ele+N_A;    % online parameters: theta;f_phases(phase shifts of the beamforming vector)
 nc   = K_User+1; % K QoS contraints+1 velocity constraints
-ncN  = K_User+1; % K QoS contraints+1 velocity constraints
-nbu  = 4;
-nbu_idx = 1:4;
-nbx=3+K_User;
-nbx_idx = [1:3,14:13+K_User];
+ncN  = 1; % 1 velocity constraints
+nbu  = 4+K_User;
+nbu_idx = 1:4+K_User;
+nbx=3;
+nbx_idx = [1:3];
 
 
 
 %% create variables
-addpath('/home/abdoul/Desktop/Matlab_Sims/ARIS_Traj_Opt/ARIS_Main_Geosedic_correct/Casadi');
+addpath('/home/abdoul/Desktop/Matlab_Sims/TVT_ARIS/Casadi');
 import casadi.*
 
 
@@ -77,8 +76,8 @@ q   = states(4:7);% quaternion
 v     = states(8:10);% velocity
 omega = states(11:13);% angular velocity
 
-sv=states(14:13+K_User);% slack variable for Quality of service softening
-sv_dot=controls(5:4+K_User);% derivative of slack variable for Quality of service softening
+
+sv=controls(5:4+K_User);% slack variable for Quality of service softening
 
 
 Omega  = controls(1:4); % Speed of rotors
@@ -133,7 +132,7 @@ q_dot = 0.5 * [
 v_dot     = -g*Ez + (ut/m)*R*Ez;
 omega_dot = I \ (-cross(omega,I*omega) + tau);
 
-x_dot = [p_dot; q_dot; v_dot; omega_dot; sv_dot];
+x_dot = [p_dot; q_dot; v_dot; omega_dot];
 
 %% implicit form
 xdot = SX.sym('xdot',nx,1);
@@ -153,28 +152,21 @@ pU = [states(1), states(2), states(3)]; % UAV position
 [pA, pR, pK] = Setup_env(N_A, K_User, M_size, freq);
 %load('pK.mat');
 
-% Initialize theta
-theta = [];
 
 % Power and Bandwidth
 Power = 0.2*ones(1, K_User);
 Bandwidth = 10^6 * ones(1, K_User);
 
-% Beamforming vector
-f_phases = array_response_phases_BS(pA,pU,freq);
+% Initialize theta
+theta = params(1:M_ele);
+f_phases=params(M_ele+1:M_ele+N_A);
 
 
-%Phase_shift optimization
+% %Phase_shift optimization
 p_bar_User=(1/K_User)*(sum(pK,2))';
 
-P_A_rx_RIS=phase_array_response_RIS(pR,pU,[],R,freq);
-P_A_tx_RIS=phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
 
-for m_idx=1:M_ele
 
-    theta=[theta; P_A_tx_RIS(m_idx)-P_A_rx_RIS(m_idx)];
-
-end
 
 %Rates
 Rates=Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,f_phases,Power,Bandwidth,freq,beta_B,beta_R);
@@ -188,7 +180,7 @@ q_horizontal=[1;0;0;0];
 geosedic_distance = quatGeodesicDistance(q, q_horizontal);
 
 h  = [p; v; sv; omega; geosedic_distance];
-hN = h;
+hN = [p; v; omega; geosedic_distance];
 
 Q_mat=diag(Q);
 QN_mat=diag(QN);
@@ -221,13 +213,11 @@ norm_v = sqrt((v(1)+1e-9)^2 + (v(2)+1e-9)^2 + (v(3)+1e-9)^2);
 Rates = Rates(:);
 sv    = sv(:);
 
-general_con   = [Rates + sv.^2 - R_min*ones(K_User,1);
+general_con   = [Rates + sv - R_min*ones(K_User,1);
                  norm_v];
 
-general_con_N = general_con;
+general_con_N = norm_v;
 
-% general_con   = [Rates'+sv.^2 -R_min*ones(K_User,1), norm_v];
-% general_con_N = [Rates'+sv.^2 -R_min*ones(K_User,1), norm_v ];
 
 
 

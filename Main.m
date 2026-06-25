@@ -57,7 +57,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 60;             % No. of shooting points
+N  = 50;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -107,6 +107,8 @@ h_UAV = 100;                          % [m] fixed altitude
 Nrand = 30000;                        % << huge number of random nodes
 
 R = eye(3);                           % rotation (identity)
+M_ele=settings.M_ele;
+N_A=settings.N_A;
 pA=settings.pA; 
 pR=settings.pR; 
 pK=settings.pK; 
@@ -121,11 +123,11 @@ p_bar_User=settings.p_bar_User;
 x_vals = xmin + (xmax-xmin)*rand(1,Nrand);   % 1×Nrand
 y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node
-Proxy_Utility_mat   = zeros(1,Nrand);                     % Σ-rate per node
+Proxy_Utility_mat   = zeros(1,Nrand);         % Σ-rate per node
 
 % ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
 p_init  =  [-100 -100];         % start (physical coordinate)
-p_final = [ -100   100];      % destination
+p_final = [ -100  100];         % destination
 
 x_vals(1)=p_init(1);x_vals(Nrand)=p_final(1);
 y_vals(1)=p_init(2);y_vals(Nrand)=p_final(2);
@@ -133,16 +135,16 @@ y_vals(1)=p_init(2);y_vals(Nrand)=p_final(2);
 for n = 1:Nrand
     pU = [x_vals(n), y_vals(n), h_UAV];
 
-    % f_phases  = array_response_phases_BS(pA,pU,freq);  
-    % 
-    % P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
-    % P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
-    % theta      = P_A_tx_RIS - P_A_rx_RIS;
+    f_phases  = array_response_phases_BS(pA,pU,freq);  
 
-    % Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
-    %                               f_phases,Power,Bandwidth,freq,...
-    %                               beta_B,beta_R);
-    %Rmat(n)    = sum(Rates);
+    P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
+    P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
+    theta      = P_A_tx_RIS - P_A_rx_RIS;
+
+    Rates      = Rates_No_Complex_phase(pA,pR,pU,pK,R,theta,...
+                                  f_phases,Power,Bandwidth,freq,...
+                                  beta_B,beta_R);
+    Rmat(n)    = sum(Rates);
 
     % Proxy Utility
     norm_diff = norm(pU - p_bar_User);
@@ -196,30 +198,70 @@ Ns = size(pathXY_ProxyUtility,1);
 
 % -------- NoT : No orientation Tracking --------
 
-
 q_rot=0; 
 q_omega=0;
-q_sv=0.5*1e-11;
+q_sv=2*1e-12;
 q_p=6;
 q_h=10;
-q_v=0.9;
+q_v=1;
 
-[controls_NoT, state_NoT, time_NoT, data_NoT] = ...
-    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
-                    h_UAV,pathXY_ProxyUtility,Tf_init);
+sv_init = 0;
+sv_max  = 7*1e7;
+
+[controls_NoT, state_NoT, time_NoT, data_NoT, solve_time_NoT] = ...
+    Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
+                    h_UAV,pathXY_ProxyUtility,Tf_init,pA,pR,freq,p_bar_User,M_ele);
 
 % -------- HoT : Horizontal orientation Tracking--------
-q_rot=8; 
-q_omega=35;
-q_sv=0.5*1e-11;
+q_rot=10; 
+q_omega=30;
+q_sv=2*1e-12;
 q_p=6;
 q_h=10;
-q_v=0.9;
+q_v=1;
+
+sv_init = 0;
+sv_max  = 7*1e7;
+
+[controls_HoT, state_HoT, time_HoT, data_HoT, solve_time_HoT] = ...
+    Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
+                    h_UAV,pathXY_ProxyUtility,Tf_init,pA,pR,freq,p_bar_User,M_ele);
 
 
-[controls_HoT, state_HoT, time_HoT, data_HoT] = ...
-    Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
-                    h_UAV,pathXY_ProxyUtility,Tf_init);
+% -------- SL : Straight Line Tracking (Third Benchmark) --------
+% 1. Create a straight line using linspace to match exactly the un-padded length (Ns - N)
+Ns_base = Ns - N;
+x_sl = linspace(p_init(1), p_final(1), Ns_base)';
+y_sl = linspace(p_init(2), p_final(2), Ns_base)';
+pathXY_Straight = [x_sl, y_sl];
 
-save("HoT_NoT_uMRAV_Both.mat")
+% 2. Enforce the final position by padding N extra elements at the end
+pathXY_Straight = [pathXY_Straight; repmat(p_final, N, 1)];
+
+% Weights setup (Copied from HoT, adjust if you prefer NoT's setup)
+q_rot=10; 
+q_omega=30;
+q_sv=2*1e-12;
+q_p=6;
+q_h=10;
+q_v=1;
+
+sv_init = 0;
+sv_max  = 7*1e7;
+
+% 3. Call NMPC on the straight line reference
+[controls_SL, state_SL, time_SL, data_SL, solve_time_SL] = ...
+    Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
+                    h_UAV,pathXY_Straight,Tf_init,pA,pR,freq,p_bar_User,M_ele);
+
+
+
+
+% -------- HOV: PSCA for localisation, beamforming and phase shift optimization (Fourth Benchmark) --------
+pU_init_HOV=[p_bar_User(1),p_bar_User(2),h_UAV];
+[pU_opt_HOV, theta_opt_HOV, f_opt_HOV, obj_evolution_HOV] = ...
+    PSCA_Optimal_Position(settings, pU_init_HOV);
+
+save("Main.mat");
+
 Draw_Main;

@@ -1,4 +1,5 @@
-function [controls_MPC, state_sim, time, data]  = Simulation_Main(settings,opt,N,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init)
+function [controls_MPC, state_sim, time, data, solve_time]  = Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility,Tf_init,...
+   pA,pR,freq,p_bar_User,M_ele)
 
 Ts = settings.Ts_st;     % Closed-loop sampling time (usually = shooting interval)
 
@@ -21,7 +22,7 @@ if opt.nonuniform_grid
     N = r;
     settings.N = N;
 else
-    [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility);
+    [input, data]  = InitData_Main(settings,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY_ProxyUtility);
 end  
 
 %% Initialize Solvers (only for advanced users)
@@ -30,6 +31,7 @@ mem = InitMemory(settings, opt, input);
 
 %% Simulation (start your simulation...)
 Tf=Tf_init;
+solve_time = [];
 mem.iter = 1; time = 0.0;
 
 t_mpc=Ts*1;
@@ -61,11 +63,89 @@ while time(end) < Tf
               
     % obtain the state measurement
     input.x0 = state_sim(end,:)';
+
+    %% ============================================================
+    % Instantaneous Beamforming and RIS Phase Shift Update
+    % (Non-predictive communication adaptation)
+    %% ============================================================
+    
+    % Current UAV state
+    x_current = input.x0;
+    
+    % Current UAV position
+    pU = x_current(1:3)';
+    
+    % Current quaternion
+    q0 = x_current(4);
+    q1 = x_current(5);
+    q2 = x_current(6);
+    q3 = x_current(7);
+    
+    % Rotation matrix
+    R = [ 1-2*(q2^2+q3^2),   2*(q1*q2-q0*q3),   2*(q1*q3+q0*q2);
+          2*(q1*q2+q0*q3),   1-2*(q1^2+q3^2),   2*(q2*q3-q0*q1);
+          2*(q1*q3-q0*q2),   2*(q2*q3+q0*q1),   1-2*(q1^2+q2^2)];
+    
+    %% ------------------------------------------------------------
+    % Beamforming update
+    %% ------------------------------------------------------------
+    
+    f_phases = array_response_phases_BS( ...
+                    pA,...
+                    pU,...
+                    freq);
+    
+    %% ------------------------------------------------------------
+    % RIS phase-shift update
+    %% ------------------------------------------------------------
+    
+    P_A_rx_RIS = phase_array_response_RIS( ...
+                        pR,...
+                        pU,...
+                        [],...
+                        R,...
+                        freq);
+    
+    P_A_tx_RIS = phase_array_response_RIS( ...
+                        pR,...
+                        pU,...
+                        p_bar_User,...
+                        R,...
+                        freq);
+    
+    theta = zeros(M_ele,1);
+    
+    for m = 1:M_ele
+        theta(m) = P_A_tx_RIS(m) - P_A_rx_RIS(m);
+    end
+    
+    %% ------------------------------------------------------------
+    % Parameter vector for NMPC
+    %% ------------------------------------------------------------
+    
+    para = zeros(np,N+1);
+    
+    % Example packing:
+    %
+    % para =
+    % [ f_phases
+    %   theta ]
+    
+    nf = length(f_phases);
+    
+    para(1:nf,:) = repmat(f_phases(:),1,N+1);
+    
+    para(nf+1:nf+M_ele,:) = ...
+        repmat(theta(:),1,N+1);
+    
+    input.od = para;
     
     if rem(time(end),t_mpc)==0
-
+            
+            tSolve = tic;
             % call the NMPC solver 
             [output, mem] = mpc_nmpcsolver(input, settings, mem, opt);
+            solve_time = [solve_time; toc(tSolve)];
                 
             % obtain the solution and update the data
             switch opt.shifting

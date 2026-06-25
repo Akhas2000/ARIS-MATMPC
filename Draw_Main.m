@@ -1,4 +1,3 @@
-
 % Add the path to the functions
 addpath(genpath('Functions'));
 
@@ -11,9 +10,11 @@ blue   = [0 0 255]/255;
 red    = [220 20 60]/255;
 orange = [255 165 0]/255;
 green  = [0 205 102]/255;
+
+% Colors for additional benchmarks
+purple = [148 0 211]/255;  % SL (Straight Line)
+teal   = [0 128 128]/255;  % HOV (Hovering UAV)
         
-
-
 
 % start generating pictures
 switch settings.model
@@ -37,7 +38,13 @@ switch settings.model
         R_min     = settings.R_min;
         M_ele     = settings.M_ele;
         N_A       = settings.N_A;
-        K_User=settings.K_User;
+        K_User    = settings.K_User;
+        
+        % Check if state_SL exists; if not, fallback to empty to avoid errors
+        if ~exist('state_SL','var')
+            state_SL = [];
+        end
+
         %% ------------------------------------------
         %  (Optional) Figure 1: Reference rate field
         %  ------------------------------------------
@@ -51,19 +58,30 @@ switch settings.model
             hold on;
         
             % BS + users + planned path
-            plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');             % BS
-            plot(pK(1,:), pK(2,:), 'ro','MarkerSize',10,'MarkerFaceColor','r');% users
-            plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth',2);                % path
-            plot(pathXY(1,1), pathXY(1,2), 'rs','MarkerFaceColor','r');        % start
-            plot(pathXY(end,1), pathXY(end,2),'rd','MarkerFaceColor','r');     % finish
-        
-            legend({'Rate samples','BS','Users','Reference path'}, ...
-                   'Location','northoutside'); 
+            p_bs = plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');             % BS
+            p_us = plot(pK(1,:), pK(2,:), 'ro','MarkerSize',10,'MarkerFaceColor','r');% users
+            p_pt = plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth',2);                % path
+            plot(pathXY(1,1), pathXY(1,2), 'rs','MarkerFaceColor','r','HandleVisibility', 'off');        % start
+            plot(pathXY(end,1), pathXY(end,2),'rd','MarkerFaceColor','r','HandleVisibility', 'off');     % finish
+            
+            % Add SL Path and HOV Position to 2D Plot
+            if ~isempty(state_SL)
+                p_sl = plot(state_SL(:,1), state_SL(:,2), '--', 'Color', purple, 'LineWidth', 2);
+            end
+            p_hov = plot(pU_opt_HOV(1), pU_opt_HOV(2), 'k*', 'MarkerSize', 12, 'LineWidth', 1.5);
+            
+            if ~isempty(state_SL)
+                legend({'Rate samples','BS','Users','Reference path', 'SL Path', 'HOV Position'}, ...
+                       'Location','northoutside', 'NumColumns', 3); 
+            else
+                legend({'Rate samples','BS','Users','Reference path', 'HOV Position'}, ...
+                       'Location','northoutside'); 
+            end
             hold off;
         end
         
         %% ------------------------------------------
-        %  Figure 2a: 3D Trajectories (NoT vs HoT)
+        %  Figure 2a: 3D Trajectories (NoT vs HoT vs SL vs HOV)
         %  ------------------------------------------
         pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
         
@@ -73,15 +91,20 @@ switch settings.model
         hold on
         plot3(state_HoT(:,1), state_HoT(:,2), state_HoT(:,3), ...
               'g', 'LineWidth', 2, 'DisplayName', 'HoT Trajectory');
+              
+        if ~isempty(state_SL)
+            plot3(state_SL(:,1), state_SL(:,2), state_SL(:,3), ...
+                  '-', 'Color', purple, 'LineWidth', 2, 'DisplayName', 'SL Trajectory');
+        end
+        
+        % HOV Position (Black Star)
+       % scatter3(pU_opt_HOV(1), pU_opt_HOV(2), pU_opt_HOV(3), 150, 'kp', 'filled', 'DisplayName', 'HOV Position');
         
         plot3(pUser_ref(:,1), pUser_ref(:,2), pUser_ref(:,3), ...
               'r', 'LineWidth', 2, 'DisplayName', 'Reference Trajectory');
         scatter3(pUser_ref(1,1), pUser_ref(1,2), pUser_ref(1,3), 100,'g^','filled','DisplayName','Start');
         scatter3(pUser_ref(end,1), pUser_ref(end,2), pUser_ref(end,3),100,'b^','filled','DisplayName','Finish');
 
-        % % BS position (origin)
-        % scatter3(0,0,0,150,'kp','filled','DisplayName','BS');
-        
         % Users (first one gets legend, rest hidden)
         num_users = size(pK, 2);
         for kUser = 1:num_users
@@ -96,9 +119,7 @@ switch settings.model
         xlabel('x (m)'); ylabel('y (m)'); zlabel('z (m)');
         legend('show','Location','best');
         
-        % ===== (Optional) Stylized BS tower/antenna (purely visual) =====
-        scatter3(0,0,0,150,'kp','filled','DisplayName','BS position');          % fixed BS at origin
-        
+ 
         % Tower: conical trunk (tapered cylinder)
         n_seg = 3;  % number of segments for metallic effect
         [base_x, base_y, z_tower] = cylinder([10, 20], n_seg);  % wide base, narrow top
@@ -148,7 +169,9 @@ switch settings.model
         z_panel = panel_z + [0, 0, panel_height, panel_height];
         
         fill3(x_panel, y_panel, z_panel, [1 0.1 0.1], 'FaceAlpha', 1, 'EdgeColor', 'k', 'HandleVisibility', 'off');
-        
+        % ===== (Optional) Stylized BS tower/antenna (purely visual) =====
+        scatter3(0,0,12,150,'rs','filled','DisplayName','BS position');          % fixed BS at origin
+       
         
         %% ------------------------------------------
         %  Figure 2b: NoT vs HoT — Trajectory components overlay
@@ -183,22 +206,22 @@ switch settings.model
         nexttile;
         plot(t_HoT, px_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_x');
         hold on;
-        plot(t_NoT, px_NoT, '-.',  'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_x');
+        plot(t_NoT, px_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_x');
         grid on; ylabel('p_x (m)'); legend('show','Location','best');
         
         % p_y
         nexttile;
-        plot(t_HoT, py_HoT, '-', 'Color', orange, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_y');
+        plot(t_HoT, py_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_y');
         hold on;
-        plot(t_NoT, py_NoT, '-.',  'Color', orange, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_y');
+        plot(t_NoT, py_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_y');
         
         grid on; ylabel('p_y (m)'); legend('show','Location','best');
         
         % p_z
         nexttile;
-        plot(t_HoT, pz_HoT, '-', 'Color', green, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_z');
+        plot(t_HoT, pz_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_z');
         hold on;
-        plot(t_NoT, pz_NoT, '-.',  'Color', green, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_z');
+        plot(t_NoT, pz_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_z');
         
         
         grid on; ylabel('p_z (m)'); xlabel('Time (s)'); legend('show','Location','best');
@@ -207,11 +230,9 @@ switch settings.model
         ax = findall(gcf,'Type','axes'); 
         linkaxes(ax,'x');
         xlim([min([t_NoT(:); t_HoT(:)]), max([t_NoT(:); t_HoT(:)])]);
-        
-        %sgtitle('Evolution of NoT and HoT Trajectories vs Time');
 
         %% ------------------------------------------
-        %  Communication metrics along both flights
+        %  Communication metrics along all flights
         %  ------------------------------------------
         
         % Initial BF using first NoT position
@@ -228,16 +249,19 @@ switch settings.model
         end
         
         % Storage
-        RATES_NoT = [];   % per-user rates (NoT)
-        RATES_HoT = [];   % per-user rates (HoT)
-        
-        Total_NoT_BP = []; Total_HoT_BP = [];
-        Total_NoT_B  = []; Total_HoT_B  = [];
-        Total_NoT_P  = []; Total_HoT_P  = [];
+        RATES_NoT = []; Total_NoT_BP = []; Total_NoT_B = []; Total_NoT_P = [];
+        RATES_HoT = []; Total_HoT_BP = []; Total_HoT_B = []; Total_HoT_P = [];
+        RATES_SL  = []; Total_SL_BP  = [];
+        RATES_HOV = []; Total_HOV_BP = [];
         
         time_draw = 0;
         iter_draw = 1;
+        
+        % Ensure loop bound accommodates all available models safely
         imax = min(size(state_NoT,1), size(state_HoT,1));
+        if ~isempty(state_SL)
+            imax = min(imax, size(state_SL,1));
+        end
         
         while time_draw(end) < Tf && iter_draw <= imax
         
@@ -272,6 +296,39 @@ switch settings.model
             for m_idx = 1:M_ele
                 theta_HoT = [theta_HoT; P_A_tx_RIS(m_idx) - P_A_rx_RIS(m_idx)];
             end
+            
+            % ---------- SL (Straight Line BP only) ----------
+            if ~isempty(state_SL)
+                q0 = state_SL(iter_draw,4); q1 = state_SL(iter_draw,5);
+                q2 = state_SL(iter_draw,6); q3 = state_SL(iter_draw,7);
+                R_SL = [ 1-2*(q2^2+q3^2),   2*(q1*q2 - q0*q3),   2*(q1*q3 + q0*q2);
+                         2*(q1*q2 + q0*q3), 1-2*(q1^2+q3^2),     2*(q2*q3 - q0*q1);
+                         2*(q1*q3 - q0*q2), 2*(q2*q3 + q0*q1),   1-2*(q1^2+q2^2) ];
+                pU_SL = [state_SL(iter_draw,1), state_SL(iter_draw,2), state_SL(iter_draw,3)];
+                f_SL  = array_response_phases_BS(pA, pU_SL, freq);
+        
+                theta_SL = [];
+                P_A_rx_RIS = phase_array_response_RIS(pR, pU_SL, [],          R_SL, freq);
+                P_A_tx_RIS = phase_array_response_RIS(pR, pU_SL, p_bar_User,  R_SL, freq);
+                for m_idx = 1:M_ele
+                    theta_SL = [theta_SL; P_A_tx_RIS(m_idx) - P_A_rx_RIS(m_idx)];
+                end
+                Rates_SL_i = Rates_No_Complex_phase(pA,pR,pU_SL,pK,R_SL,theta_SL,f_SL, Power,Bandwidth,freq,beta_B,beta_R);
+                RATES_SL   = [RATES_SL; Rates_SL_i];
+                Total_SL_BP = [Total_SL_BP; sum(Rates_SL_i)];
+            end
+            
+            % ---------- HOV (Hovering UAV BP only) ----------
+            R_HOV = eye(3);
+            pU_HOV = [pU_opt_HOV(1), pU_opt_HOV(2), pU_opt_HOV(3)];
+            f_HOV  = f_opt_HOV;
+            
+            
+            theta_HOV = theta_opt_HOV;
+
+            Rates_HOV_i = Rates_No_Complex_phase(pA,pR,pU_HOV,pK,R_HOV,theta_HOV,f_HOV, Power,Bandwidth,freq,beta_B,beta_R);
+            RATES_HOV   = [RATES_HOV; Rates_HOV_i];
+            Total_HOV_BP = [Total_HOV_BP; sum(Rates_HOV_i)];
         
             % ---------- Rates ----------
             Rates_NoT_i = Rates_No_Complex_phase(pA,pR,pU_NoT,pK,R_NoT,theta_NoT,f_NoT, Power,Bandwidth,freq,beta_B,beta_R);
@@ -306,11 +363,16 @@ switch settings.model
         %  Figure 3: Rates per user (NoT vs HoT)
         %  ------------------------------------------
         kUsers = size(RATES_NoT, 2);
+        
+        % Secure uniform time vector matching the truncated simulation steps
+        t_plot = time_draw(2:end);
+        t_plot = t_plot(:); 
+        
         figure(); hold on;
         for user = 1:kUsers
-            plot(time_NoT(2:end), RATES_HoT(:, user), ...
+            plot(t_plot, RATES_HoT(:, user), ...
                 'LineWidth', 1.5, 'LineStyle', '-', 'DisplayName', ['Rate-HoT ', num2str(user)]);
-            plot(time_NoT(2:end), RATES_NoT(:, user), ...
+            plot(t_plot, RATES_NoT(:, user), ...
                 'LineWidth', 1.5, 'LineStyle', '-.',  'DisplayName', ['Rate-NoT ', num2str(user)]);
 
         end
@@ -320,12 +382,8 @@ switch settings.model
 
 
         %% ------------------------------------------
-        %  Figure 3: Average User Rate (Mean only)
+        %  Figure 4: Average User Rate (Mean only)
         %  ------------------------------------------
-        
-        % Time vector
-        t = time_draw(2:end);
-        t = t(:);   % ensure column
         
         % Statistics (mean only)
         mean_HoT = mean(RATES_HoT, 2);
@@ -334,10 +392,6 @@ switch settings.model
         mean_HoT = mean_HoT(:);
         mean_NoT = mean_NoT(:);
         
-        % Define colors (safe MATLAB defaults)
-        blue = [0 0.4470 0.7410];
-        red  = [0.8500 0.3250 0.0980];
-        
         figure; 
         hold on; 
         box on;
@@ -345,17 +399,45 @@ switch settings.model
         % =========================
         % HoT
         % =========================
-        h1 = plot(t, mean_HoT, ...
+        h1 = plot(t_plot, mean_HoT, ...
          'Color', blue, ...
          'LineWidth', 2);
         
         % =========================
         % NoT
         % =========================
-        h2 = plot(t, mean_NoT, ...
-         'Color', red, ...
-         'LineWidth', 2);
+        h2 = plot(t_plot, mean_NoT, ...
+         'Color', orange, ...
+         'LineWidth', 1.5);
+
+        % =========================
+        % SL
+        % =========================
+        h_sl = [];
+        if ~isempty(RATES_SL)
+            mean_SL = mean(RATES_SL, 2);
+            h_sl = plot(t_plot, mean_SL(:), ...
+             'Color', purple, ...
+             'LineWidth', 1.5, ...
+             'LineStyle', '-');
+        end
         
+        % =========================
+        % HOV
+        % =========================
+        mean_HOV = mean(RATES_HOV, 2);
+        h_hov = plot(t_plot, mean_HOV(:), ...
+         'Color', teal, ...
+         'LineWidth', 1.5, ...
+         'LineStyle', '-');
+
+        % =========================
+        % HoT (Re-plot so it stays on top)
+        % =========================
+        h1_prime = plot(t_plot, mean_HoT, ...
+         'Color', blue, ...
+         'LineWidth', 1.5);
+         
         % =========================
         % QoS line
         % =========================
@@ -365,46 +447,52 @@ switch settings.model
         ylabel('Average user rate (bit/s)','FontSize',12);
         
         grid on;
-        set(gca,'FontSize',11);
         
-        legend([h1 h2 h3], ...
-           {'HoT (Average)', ...
-            'NoT (Average)', ...
-            'R_{min}'}, ...
-           'Location','northoutside','NumColumns',3);
+        leg_handles = [h1 h2];
+        leg_labels = {'HoT (Average)', 'NoT (Average)'};
+        
+        if ~isempty(h_sl)
+            leg_handles(end+1) = h_sl;
+            leg_labels{end+1} = 'SL (Average)';
+        end
+        leg_handles(end+1) = h_hov;
+        leg_labels{end+1} = 'HOV (Average)';
+        
+        leg_handles(end+1) = h3;
+        leg_labels{end+1} = 'R_{min}';
+        
+        legend(leg_handles, leg_labels, 'Location','northoutside','NumColumns',3);
         
         hold off;
 
         %% ------------------------------------------
-        %  Figure 4: Total network rate (schemes)
+        %  Figure 5: Total network rate (schemes)
         %  ------------------------------------------
         figure; hold on;
 
-        plot(time_NoT(2:end), Total_HoT_BP, 'b-', 'LineWidth', 1.5, 'DisplayName', 'HoT-BP');
-        plot(time_NoT(2:end), Total_NoT_BP, 'b-.',  'LineWidth', 1.5, 'DisplayName', 'NoT-BP');
+        plot(t_plot, Total_HoT_BP, 'b-', 'LineWidth', 1.5, 'DisplayName', 'HoT-BP');
+        plot(t_plot, Total_NoT_BP, 'b--',  'LineWidth', 1.5, 'DisplayName', 'NoT-BP');
         
+        plot(t_plot, Total_HoT_P,  'r-', 'LineWidth', 1.5, 'DisplayName', 'HoT-P');
+        plot(t_plot, Total_NoT_P,  'r--',  'LineWidth', 1.5, 'DisplayName', 'NoT-P');
         
-        plot(time_NoT(2:end), Total_HoT_P,  'r-', 'LineWidth', 1.5, 'DisplayName', 'HoT-P');
-        plot(time_NoT(2:end), Total_NoT_P,  'r-.',  'LineWidth', 1.5, 'DisplayName', 'NoT-P');
-        
-        
-        plot(time_NoT(2:end), Total_HoT_B,  'g-', 'LineWidth', 1.5, 'DisplayName', 'HoT-B');
-        plot(time_NoT(2:end), Total_NoT_B,  'g-.',  'LineWidth', 1.5, 'DisplayName', 'NoT-B');
+        plot(t_plot, Total_HoT_B,  '-','color', "#FF8800", 'LineWidth', 1.5, 'DisplayName', 'HoT-B');
+        plot(t_plot, Total_NoT_B,  '--','color', "#FF8800",  'LineWidth', 1.5, 'DisplayName', 'NoT-B');
         
         xlabel('Time (s)'); ylabel('Total network rate (bit/s)');
         legend('show','Location','best'); grid on;
         
         %% ------------------------------------------
-        %  Figure 5: Per-user transmitted data (cum.)
+        %  Figure 6: Per-user transmitted data (cum.)
         %  ------------------------------------------
         TD_NoT = cumsum(RATES_NoT) * Ts;
         TD_HoT = cumsum(RATES_HoT) * Ts;
         
         figure; hold on;
         for user = 1:kUsers
-            plot(time_NoT(2:end), TD_HoT(:, user), ...
+            plot(t_plot, TD_HoT(:, user), ...
                 'LineWidth',1.5, 'LineStyle','-', 'DisplayName',['Data-HoT ',num2str(user)]);
-            plot(time_NoT(2:end), TD_NoT(:, user), ...
+            plot(t_plot, TD_NoT(:, user), ...
                 'LineWidth',1.5, 'LineStyle','-.',  'DisplayName',['Data-NoT ',num2str(user)]);
 
         end
@@ -413,7 +501,7 @@ switch settings.model
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
         
         %% ------------------------------------------
-        %  Figure 6: Cumulative network data (schemes)
+        %  Figure 7: Cumulative network data (schemes)
         %  ------------------------------------------
         Trans_NoT_BP = cumsum(Total_NoT_BP) * Ts;
         Trans_HoT_BP = cumsum(Total_HoT_BP) * Ts;
@@ -423,21 +511,32 @@ switch settings.model
         Trans_HoT_P  = cumsum(Total_HoT_P)  * Ts;
         
         figure; hold on;
-        plot(time_NoT(2:end), Trans_HoT_BP, 'b-', 'LineWidth',1.5, 'DisplayName','HoT-BP');
-        plot(time_NoT(2:end), Trans_NoT_BP, 'b-.',  'LineWidth',1.5, 'DisplayName','NoT-BP');
+        Trans_HOV_BP = cumsum(Total_HOV_BP) * Ts;
+        plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
+
+        plot(t_plot, Trans_HoT_BP, 'b-', 'LineWidth',1.5, 'DisplayName','HoT-BP');
+        plot(t_plot, Trans_NoT_BP, 'b--',  'LineWidth',1.5, 'DisplayName','NoT-BP');
         
-        plot(time_NoT(2:end), Trans_HoT_P,  'r-', 'LineWidth',1.5, 'DisplayName','HoT-P');
-        plot(time_NoT(2:end), Trans_NoT_P,  'r-.',  'LineWidth',1.5, 'DisplayName','NoT-P');
+
+
         
-        plot(time_NoT(2:end), Trans_HoT_B,  'g-', 'LineWidth',1.5, 'DisplayName','HoT-B');
-        plot(time_NoT(2:end), Trans_NoT_B,  'g-.',  'LineWidth',1.5, 'DisplayName','NoT-B');
+        plot(t_plot, Trans_HoT_P,  'r-', 'LineWidth',1.5, 'DisplayName','HoT-P');
+        plot(t_plot, Trans_NoT_P,  'r--',  'LineWidth',1.5, 'DisplayName','NoT-P');
+
+        if exist('Total_SL_BP','var') && ~isempty(Total_SL_BP)
+            Trans_SL_BP = cumsum(Total_SL_BP) * Ts;
+            plot(t_plot, Trans_SL_BP, '-', 'Color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL-BP');
+        end
         
+        
+        plot(t_plot, Trans_HoT_B,  '-' ,'color', "#FF8800",'LineWidth',1.5, 'DisplayName','HoT-B');
+        plot(t_plot, Trans_NoT_B,  '--', 'color', "#FF8800", 'LineWidth',1.5, 'DisplayName','NoT-B');
         
         xlabel('Time (s)'); ylabel('Cumulative transmitted data (bit)');
         legend('show','Location','best'); grid on;
         
         %% ------------------------------------------
-        %  Figure 7: Velocity (HoT run)
+        %  Figure 8: Velocity (HoT run)
         %  ------------------------------------------
         v_HoT  = state_HoT(:,8:10);
         
@@ -451,14 +550,16 @@ switch settings.model
         v_mag = sqrt(vx.^2 + vy.^2 + vz.^2);
         
         figure; hold on;
-        plot(time_HoT, v_mag, 'LineWidth', 1.5, 'DisplayName', 'V (HoT)');
-        %yline(v_min, '--k', 'LineWidth', 1.5, 'HandleVisibility','off');
-        yline(v_max, '--k', 'LineWidth', 1.5, 'HandleVisibility','off');
+        plot(time_HoT, v_mag, 'LineWidth', 1.5 );
+        yline(v_max, '--r', 'LineWidth', 1.5);
         xlabel('Time (s)'); ylabel('Velocity (m/s)');
-        legend('show','Location','best'); ylim([v_min, v_max + 3]); grid on; hold off;
+        ylim([v_min, v_max + 3]); grid on; hold off;
+
+        lgd = legend('v (HoT)','$\bar{v}$','Interpreter','latex');
+        lgd.FontSize = 13;   
         
         %% ------------------------------------------
-        %  Figure 8: Angular velocities (HoT run)
+        %  Figure 9: Angular velocities (HoT run)
         %  ------------------------------------------
         omega_HoT = state_HoT(:,11:13);
         figure; hold on;
@@ -469,26 +570,37 @@ switch settings.model
         legend('show'); grid on; hold off;
         
         %% ------------------------------------------
-        %  Figure 9: Rotor speeds (HoT run)
+        %  Figure 10: Rotor speeds (HoT run)
         %  ------------------------------------------
         Omega_min = data_HoT.Omega_min;
         Omega_max = data_HoT.Omega_max;
         Omega_HoT = controls_HoT;
         
         figure;
-        for i = 1:4
+        i=1;
+        subplot(4,1,i);
+        plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', 1.25,'HandleVisibility','off');
+        yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5);
+        yline(sqrt(Omega_max), '--r', 'LineWidth', 1.5);
+        ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
+        ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
+        lgd = legend('$\underline{\Omega}$','$\bar{\Omega}$','Interpreter','latex','Orientation','horizontal');
+        lgd.FontSize = 13; 
+        
+
+        for i = 2:4
             subplot(4,1,i);
-            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', 1.25);
-            yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5);
-            yline(sqrt(Omega_max), '--k', 'LineWidth', 1.5);
+            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', 1.25,'HandleVisibility','off');
+            yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5,'HandleVisibility','off');
+            yline(sqrt(Omega_max), '--r', 'LineWidth', 1.5,'HandleVisibility','off');
             ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
-             ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
+            ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
         end
         xlabel('Time (s)');
-
         
+
         %% ------------------------------------------
-        %  Figure 10: Euler angles (HoT run)
+        %  Figure 11: Euler angles (HoT run)
         %  ------------------------------------------
         % state_HoT(:,4:7) = [q0 q1 q2 q3] where MATLAB quat2rotm expects [w x y z]
         q_HoT   = state_HoT(:,4:7);
@@ -512,9 +624,8 @@ switch settings.model
         legend('show'); grid on; hold off;
 
         %% ------------------------------------------
-        %  Figure 10: Position tracking error(HoT run)
+        %  Figure 12: Position tracking error(HoT run)
         %  ------------------------------------------
-        % Reference states (YOU must provide these)
         
         %% ============================================================
         %          BUILD REFERENCE STATE
@@ -590,7 +701,6 @@ switch settings.model
         hold on;
         plot(time_NoT, err_p_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
         grid on; ylabel('‖p - p_d‖ (m)');
-        %title('Tracking Errors: HoT (solid) vs NoT (dashed)');
         legend('show');
         
         % --- Velocity Tracking Error Norm ---
@@ -599,7 +709,6 @@ switch settings.model
         hold on;
         plot(time_NoT, err_v_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
         grid on; ylabel('‖v - v_d‖ (m/s)');
-        %legend('show');
         
         % --- Angular Velocity Tracking Error Norm ---
         nexttile;
@@ -607,7 +716,6 @@ switch settings.model
         hold on;
         plot(time_NoT, err_w_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
         grid on; ylabel('‖\omega - \omega_d‖ (rad/s)');
-        %legend('show');
         
         % --- Orientation Geodesic Error ---
         nexttile;
@@ -616,7 +724,6 @@ switch settings.model
         plot(time_NoT, err_q_NoT, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
         grid on; ylabel('$$\|\log(q \circ q_d^\star)\|$$','Interpreter','latex');
         xlabel('Time (s)');
-        %legend('show');
 
         %% ============================================================
         %      OBJECTIVE DECOMPOSITION — HoT
@@ -628,7 +735,7 @@ switch settings.model
         % Extract signals
         p     = p_HoT;
         v     = v_HoT;
-        sv    = state_HoT(:,14:13+K_User);
+        sv    = controls_HoT(:,5:4+K_User);
         omega = w_HoT;
         eta   = err_q_HoT;   % geodesic distance already computed
         
@@ -655,9 +762,6 @@ switch settings.model
         
         % Total cost
         J_total = J_p + J_v + J_sv + J_omega + J_eta;
-
-
-
 
         
         %% ============================================================
@@ -713,6 +817,187 @@ switch settings.model
         % Link all x-axes
         ax = findall(gcf,'Type','axes');
         linkaxes(ax,'x');
+
+
+        %% ============================================================
+        % QoS VIOLATION STATISTICS
+        %% ============================================================
+        
+        % ---------- Satisfaction probability ----------
+        sat_matrix = (RATES_HoT >= R_min);
+        
+        QoS_satisfaction_probability = ...
+            100 * sum(sat_matrix(:)) / numel(sat_matrix);
+        
+        % ---------- Average slack ----------
+        slack_HoT = sv;
+        
+        average_slack = mean(slack_HoT(:));
+        
+        % ---------- Maximum slack ----------
+        max_slack = max(slack_HoT(:));
+        
+        % ---------- Maximum violation depth ----------
+        violation_depth = max(0, R_min - RATES_HoT);
+        
+        max_violation_depth = max(violation_depth(:));
+        
+        average_violation_depth = mean(violation_depth(:));
+        
+        fprintf('\nQoS Statistics\n');
+        fprintf('Satisfaction probability = %.2f %%\n', ...
+                QoS_satisfaction_probability);
+        fprintf('Average slack = %.4f\n', average_slack);
+        fprintf('Maximum slack = %.4f\n', max_slack);
+        fprintf('Average violation depth = %.3f bit/s\n', ...
+                average_violation_depth);
+        fprintf('Maximum violation depth = %.3f bit/s\n', ...
+                max_violation_depth);
+
+
+        % Plot 1: Satisfaction indicator
+        figure;
+        
+        imagesc(t_plot,1:K_User,sat_matrix');
+        
+        colormap([1 0.6 0.6;
+                  0.6 1 0.6]);
+        
+        xlabel('Time (s)');
+        ylabel('User index');
+        
+        title('QoS Satisfaction Map');
+        
+        cb = colorbar;
+        cb.Ticks = [0.25 0.75];
+        cb.TickLabels = {'Violation','Satisfied'};
+
+        % Plot 2: Slack variables
+
+        figure;
+        hold on;
+        
+        for i = 1:K_User
+            plot(time_HoT,slack_HoT(:,i), ...
+                 'LineWidth',1.5, ...
+                 'DisplayName',['User ',num2str(i)]);
+        end
+        
+        xlabel('Time (s)');
+        ylabel('Slack variable');
+        
+        legend show;
+        grid on;
+
+        %% ------------------------------------------
+        %  Plot: Average Slack Variable over Time
+        %  ------------------------------------------
+        
+        % Extract slack variables from the control matrices
+        slack_HoT_all = controls_HoT(:, 5:4+K_User);
+        slack_NoT_all = controls_NoT(:, 5:4+K_User);
+        
+        % Compute average across all users at each time step
+        mean_slack_HoT = mean(slack_HoT_all, 2);
+        mean_slack_NoT = mean(slack_NoT_all, 2);
+        
+        figure; 
+        hold on; 
+        box on;
+        
+        % =========================
+        % HoT Average Slack
+        % =========================
+        h_slack_hot = plot(time_HoT, mean_slack_HoT, ...
+             'Color', blue, ...
+             'LineWidth', 2, ...
+             'LineStyle', '-');
+             
+        % =========================
+        % NoT Average Slack
+        % =========================
+        h_slack_not = plot(time_NoT, mean_slack_NoT, ...
+             'Color', orange, ...
+             'LineWidth', 1.5, ...
+             'LineStyle', '--');
+             
+        % Re-plot HoT on top to ensure it is clearly visible
+        plot(time_HoT, mean_slack_HoT, ...
+             'Color', blue, ...
+             'LineWidth', 1.5, ...
+             'LineStyle', '-');
+             
+        xlabel('Time (s)', 'FontSize', 12);
+        ylabel('Average Slack Variable', 'FontSize', 12);
+        
+        grid on;
+        
+        % Add Legend
+        legend([h_slack_hot, h_slack_not], ...
+               {'HoT (Average Slack)', 'NoT (Average Slack)'}, ...
+               'Location', 'northoutside', 'NumColumns', 2);
+               
+        hold off;
+
+
+        % Plot 3: Violation depth
+
+        figure;
+        hold on;
+        
+        for i = 1:K_User
+            plot(t_plot, ...
+                 violation_depth(:,i), ...
+                 'LineWidth',1.5, ...
+                 'DisplayName',['User ',num2str(i)]);
+        end
+        
+        xlabel('Time (s)');
+        ylabel('Violation depth (bit/s)');
+        
+        legend show;
+        grid on;
+        
+
+        % %% HoT:Histogram of NMPC solve times (Complexity Figure) 
+        figure;
+
+        histogram(solve_time_HoT,...
+                  'Normalization','percentage',...
+                  'NumBins',50);
+        
+        hold on;
+        
+        xline(Ts,...
+              'r',...
+              'LineWidth',2);
+        
+        xlabel('Time [s]');
+        ylabel('% control steps of HoT');
+        
+        grid on;
+        box on;
+
+        % %% NoT:Histogram of NMPC solve times (Complexity Figure) 
+        figure;
+
+        histogram(solve_time_NoT,...
+                  'Normalization','percentage',...
+                  'NumBins',50);
+        
+        hold on;
+        
+        xline(Ts,...
+              'r',...
+              'LineWidth',2);
+        
+        xlabel('Time [s]');
+        ylabel('% control steps of NoT');
+        
+        grid on;
+        box on;
+
+
 
 end
 

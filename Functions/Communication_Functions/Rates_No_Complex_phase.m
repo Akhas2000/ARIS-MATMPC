@@ -13,7 +13,7 @@ Rot_Mat_XYZ = R;
 for k=1:K
     Mod_gk=(sqrt(beta_R)/norm(pU'-pK(:,k)));
     Mod_H=(sqrt(beta_B)/norm(pU));
-    Mod_f=(1/sqrt(N));
+    Mod_f=(1/sqrt(N));%because f=atx/||a_tx|| MRT Strategy
     Ck=Power(k)*G_antenna*Mod_f/sigma_2;
     Cos_comp=0;
     Sin_comp=0;

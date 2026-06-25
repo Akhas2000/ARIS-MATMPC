@@ -1,5 +1,5 @@
 
-function [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY)
+function [input, data]  = InitData_Main(settings,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY)
     %% Pull dims from settings
     nx       = settings.nx;
     nu       = settings.nu;
@@ -29,11 +29,12 @@ function [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_ome
             input.x0 = [ pathXY(1,1);pathXY(1,2);h_UAV;   ...  % p start
                          1;0;0;0;   ...  % q start
                          0;0;0;   ...  % v start
-                         0;0;0; ...    % ω start
-                         sqrt(1e+8)*ones(K_User,1) ... % sv start
+                         0;0;0 ...    % ω start
+                         
                          
                          ];      
-            input.u0 = [Omega_min*ones(4,1);ones(K_User,1)];      % Omega1,...,Omega4, sv_dot
+
+            input.u0 = [Omega_min*ones(4,1);sv_init*ones(K_User,1)];      % Omega1,...,Omega4, sv start
             input.z0 = zeros(nz,1);
             para0   = zeros(np,1);
 
@@ -47,17 +48,17 @@ function [input, data]  = InitData_Main(settings,Ns,q_sv,q_p,q_h,q_v,q_rot,q_ome
             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
-            QN =    [q_p;q_p;q_h; q_v;q_v;q_v;zeros(K_User,1);q_omega;q_omega;q_omega;q_rot];   
+            QN =    [q_p;q_p;q_h; q_v;q_v;q_v;q_omega;q_omega;q_omega;q_rot];   
             data.q_0=q_0;
             %% Bounds on states (none) and controls Ω_i ≥ 0
-            lb_x = [-400;-400;-200;zeros(K_User,1)];
-            ub_x = [400;400;200;inf*ones(K_User,1)];
-            lb_u = [Omega_min*ones(4,1)];
-            ub_u = [Omega_max*ones(4,1)];
+            lb_x = [-400;-400;-200];
+            ub_x = [400;400;200];
+            lb_u = [Omega_min*ones(4,1);zeros(K_User,1)];
+            ub_u = [Omega_max*ones(4,1);sv_max*ones(K_User,1)];
             lb_g = [zeros(K_User,1);v_min];
             ub_g = [inf*ones(K_User,1);v_max];
-            lb_gN= lb_g;
-            ub_gN= ub_g;
+            lb_gN= [v_min];
+            ub_gN= [v_max];
 
 
 

@@ -313,7 +313,7 @@ switch settings.model
         % Extract signals
         p     = state_sim(:,1:3);
         v     = state_sim(:,8:10);
-        sv    = state_sim(:,14:13+K_User);
+        sv    = controls_MPC(:,5:4+K_User);
         omega = state_sim(:,11:13);
         q= state_sim(:,4:7);
         q_ref=zeros(size(q,1),4);
@@ -412,16 +412,117 @@ switch settings.model
         linkaxes(ax,'x');
 
     
-    %% ===============================
-    %  Simplified_UAV_Kinematic (Yaw-only)
-    %  ===============================
-    case 'Simplified_UAV_Kinematic'
-
-        %% --- Similar computation, yaw-only rotation matrix -------------
-        % You can adapt same structure with R = [cos(yaw) -sin(yaw) 0; sin(yaw) cos(yaw) 0; 0 0 1]
-        % and same plots, naming them HoT.
-        % (Omitted here for brevity — can expand if you want.)
         
+
+        %% ============================================================
+        % QoS VIOLATION STATISTICS
+        %% ============================================================
+        
+        % ---------- Satisfaction probability ----------
+        sat_matrix = (RATES_HoT >= R_min);
+        
+        QoS_satisfaction_probability = ...
+            100 * sum(sat_matrix(:)) / numel(sat_matrix);
+        
+        % ---------- Average slack ----------
+        slack_HoT = sv;
+        
+        average_slack = mean(slack_HoT(:));
+        
+        % ---------- Maximum slack ----------
+        max_slack = max(slack_HoT(:));
+        
+        % ---------- Maximum violation depth ----------
+        violation_depth = max(0, R_min - RATES_HoT);
+        
+        max_violation_depth = max(violation_depth(:));
+        
+        average_violation_depth = mean(violation_depth(:));
+        
+        fprintf('\nQoS Statistics\n');
+        fprintf('Satisfaction probability = %.2f %%\n', ...
+                QoS_satisfaction_probability);
+        fprintf('Average slack = %.4f\n', average_slack);
+        fprintf('Maximum slack = %.4f\n', max_slack);
+        fprintf('Average violation depth = %.3f bit/s\n', ...
+                average_violation_depth);
+        fprintf('Maximum violation depth = %.3f bit/s\n', ...
+                max_violation_depth);
+
+
+        % Plot 1: Satisfaction indicator
+        figure;
+        
+        imagesc(time(2:end),1:K_User,sat_matrix');
+        
+        colormap([1 0.6 0.6;
+                  0.6 1 0.6]);
+        
+        xlabel('Time (s)');
+        ylabel('User index');
+        
+        title('QoS Satisfaction Map');
+        
+        cb = colorbar;
+        cb.Ticks = [0.25 0.75];
+        cb.TickLabels = {'Violation','Satisfied'};
+
+        % Plot 2: Slack variables
+
+        figure;
+        hold on;
+        
+        for i = 1:K_User
+            plot(time,slack_HoT(:,i), ...
+                 'LineWidth',1.5, ...
+                 'DisplayName',['User ',num2str(i)]);
+        end
+        
+        xlabel('Time (s)');
+        ylabel('Slack variable');
+        
+        legend show;
+        grid on;
+
+
+        % Plot 3: Violation depth
+
+        figure;
+        hold on;
+        
+        for i = 1:K_User
+            plot(time(2:end), ...
+                 violation_depth(:,i), ...
+                 'LineWidth',1.5, ...
+                 'DisplayName',['User ',num2str(i)]);
+        end
+        
+        xlabel('Time (s)');
+        ylabel('Violation depth (bit/s)');
+        
+        legend show;
+        grid on;
+
+        
+        % %% Histogram of NMPC solve times (Complexity Figure) 
+        figure;
+
+        histogram(solve_time,...
+                  'Normalization','percentage',...
+                  'NumBins',50);
+        
+        hold on;
+        
+        xline(Ts,...
+              'r',...
+              'LineWidth',2);
+        
+        xlabel('Time [s]');
+        ylabel('% control steps');
+        
+        grid on;
+        box on;
+
 end
 
 

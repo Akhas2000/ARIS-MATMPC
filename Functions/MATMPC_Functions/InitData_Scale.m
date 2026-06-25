@@ -1,5 +1,5 @@
 
-function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
+function [input, data]  = InitData_Scale(settings,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega,h_UAV,pathXY)
     %% Pull dims from settings
     nx       = settings.nx;
     nu       = settings.nu;
@@ -19,12 +19,9 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
 
     switch settings.model
         %% Tracking with soft communication constraint
-         case {'GTMR_4_com_soft', 'RIS_44', 'RIS_28','RIS_82'}
+        case 'GTMR_4_com_soft_scale'
             %% Initial conditions
             v_max=17;v_min=0;data.v_min=v_min;data.v_max=v_max;
-            sv_init = 0;
-            sv_max  = 7*1e7;
-
             
             Omega_min=16^2;Omega_max=100^2;data.Omega_min=Omega_min;data.Omega_max=Omega_max;%Hz^2
 
@@ -36,29 +33,23 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
                          
                          
                          ];      
-            input.u0 = [Omega_min*ones(4,1); sv_init*ones(K_User,1)];      % Omega1,...,Omega4, sv start
+
+            input.u0 = [Omega_min*ones(4,1);sv_init*ones(K_User,1)];      % Omega1,...,Omega4, sv start
             input.z0 = zeros(nz,1);
             para0   = zeros(np,1);
 
 
             %% Weights
 
-
-            q_rot=10; 
-            q_omega=30;
-            q_sv=2*1e-12;
-            q_p=6;
-            q_h=10;
-            q_v=1;
+            
             
 
-
+            
             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];
             
             Q  = repmat(q_0,1,N);
             QN =    [q_p;q_p;q_h; q_v;q_v;q_v;q_omega;q_omega;q_omega;q_rot];   
             data.q_0=q_0;
-
             %% Bounds on states (none) and controls Ω_i ≥ 0
             lb_x = [-400;-400;-200];
             ub_x = [400;400;200];
@@ -68,9 +59,6 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             ub_g = [inf*ones(K_User,1);v_max];
             lb_gN= [v_min];
             ub_gN= [v_max];
-
-
-
 
 
 
@@ -128,19 +116,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
     switch settings.model
 
 
-        case {'GTMR_4_com_soft', 'RIS_44', 'RIS_28','RIS_82'}
-
-            data.REF        = zeros(Ns, ny);
-            data.REF(:,1:2) = pathXY;%p_ref(1:2)
-            data.REF(:,3) = h_UAV*ones(Ns, 1);%p_ref(3)
-            data.REF(:,4:6) = zeros(Ns, 3);%v_ref
-            data.REF(:,7:6+K_User) = zeros(Ns, K_User);%sv_ref
-            data.REF(:,6+K_User+1:6+K_User+3) = zeros(Ns, 3);%omega_ref(1:2)
-            % q_identity = [1, 0, 0, 0];     
-            % data.REF(:,6+K_User+3+1:end) = repmat(q_identity, Ns, 1);   % q_ref:Ns x 4 matrix
-            geosedic_ref = 0;     
-            data.REF(:,6+K_User+3+1) = repmat(geosedic_ref, Ns, 1);   % geosedic_ref:Ns x 1 matrix
-        
+        case 'GTMR_4_com_soft_scale'
 
             data.REF        = zeros(Ns, ny);
             data.REF(:,1:2) = pathXY;%p_ref(1:2)
@@ -152,13 +128,6 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             % data.REF(:,6+K_User+3+1:end) = repmat(q_identity, Ns, 1);   % q_ref:Ns x 4 matrix
             geosedic_ref = 0;     
             data.REF(:,6+K_User+3+1) = repmat(geosedic_ref, Ns, 1);   % eta_ref:Ns x 3 matrix
-            
-
-     
-
-
-
-            
             
 
      

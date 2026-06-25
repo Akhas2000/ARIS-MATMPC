@@ -14,10 +14,15 @@ function [pA,pR,pK]=Setup_env(N,K,M_size,freq)
 
 
 
-x_min=140;
+% x_min=140;
+% x_max=150;
+% y_min=-10;
+% y_max=10;
+
+x_min=100;
 x_max=150;
-y_min=-10;
-y_max=10;
+y_min=-30;
+y_max=30;
 
 %Base station Height
 h_BS=68;
