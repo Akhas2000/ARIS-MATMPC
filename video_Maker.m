@@ -8,15 +8,35 @@
 % - Tf         [scalar]  (desired video duration in seconds)
 
 %% Put NoT for the NoT scheme and HoT for the HoT one
-state_sim=state_HoT;
-pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
+
+
 
 %% === SETTINGS ===
 frameRate = 15;                       
 video_filename = 'UAV_Flight_Trajectory_HoT.avi';
 
+
+
+%% Mode: SL ; HoT or NoT
+% %SL Mode
+% state_sim=state_SL;
+% pUser_ref=[pathXY_Straight, h_UAV*ones(Ns,1)];  % user/reference path;
+% color_benchmark=[0.75 0.47 0.85];%Mauve
+
+% %HoT
+state_sim=state_HoT;
+pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
+color_benchmark=[0.4660 0.6740 0.1880 ];%green
+
+% %NoT
+% state_sim=state_NoT;
+% pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
+% color_benchmark=[ 0.0000 0.4470 0.7410 ];%blue
+
+
 %% === Compute Frame Sampling Step ===
 N = size(state_sim, 1);
+Tf=Tf_init;
 total_frames = Tf * frameRate;
 step = max(1, floor(N / total_frames));  
 
@@ -101,9 +121,12 @@ for i = 1:step:N
     plot3(pUser_ref(:,1), pUser_ref(:,2), pUser_ref(:,3), ...
           'r-', 'LineWidth', 2);
 
+    scatter3(pUser_ref(1,1), pUser_ref(1,2), pUser_ref(1,3), 100,'g^','filled');
+    scatter3(pUser_ref(end,1), pUser_ref(end,2), pUser_ref(end,3),100,'b^','filled');
+
     % --- UAV Trajectory Trail ---
     plot3(state_sim(1:i,1), state_sim(1:i,2), state_sim(1:i,3), ...
-          'b-', 'LineWidth', 2);
+          'Color',color_benchmark, 'LineWidth', 3);
 
     % --- UAV Pose ---
     pos = state_sim(i,1:3);
