@@ -84,7 +84,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation
 
 % Simulation Duration
-Tf_init = 45;  % simulation time
+Tf_init = 60;  % simulation time
 Tf = Tf_init;
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
