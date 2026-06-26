@@ -224,32 +224,67 @@ smooth_win = 5;   % odd window length; increase for more smoothing
 
 
 %% ------------------------------------------
-%  (Optional) Figure 1: Reference rate field
-%  ------------------------------------------
-if exist('x_vals','var') && exist('y_vals','var') && exist('Rmat','var')
-    pathXY = pathXY_ProxyUtility;
+% Reference Trajectories Comparison
+% ------------------------------------------
 
-    figure;
-    scatter(x_vals, y_vals, 12, Rmat, 'filled');            % colour = Σ-rate
-    axis equal; grid on; colorbar;
-    xlabel('x (m)'); ylabel('y (m)');
-    hold on;
+figure;
 
-    % BS + users + planned path
-    plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');             % BS
-    plot(pK(1,:), pK(2,:), 'ro','MarkerSize',10,'MarkerFaceColor','r');% users
-    plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth',2);                % path
-    plot(Ref_Traj_ZOH(1,:), Ref_Traj_ZOH(2,:), 'c-','LineWidth',2);                % path
-    plot(pathXY(1,1), pathXY(1,2), 'rs','MarkerFaceColor','r');        % start
-    plot(pathXY(end,1), pathXY(end,2),'rd','MarkerFaceColor','r');     % finish
+scatter(x_vals,y_vals,12,Rmat,'filled');
+axis equal;
+grid on;
+colorbar;
+xlabel('x (m)');
+ylabel('y (m)');
+hold on;
 
-    legend({'Rate samples','BS','Users','Reference path Djikstra', 'Reference path PSCA'}, ...
-           'Location','northoutside'); 
-    hold off;
+% BS
+plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');
 
+% Users
+plot(pK(1,:),pK(2,:),'ro',...
+    'MarkerSize',6,...
+    'MarkerFaceColor','r');
 
+% Barycenter
+plot(p_bar_User(1),p_bar_User(2),...
+    'kp',...
+    'MarkerSize',10,...
+    'MarkerFaceColor','m');
 
-end
+% Dijkstra reference
+plot(pathXY_ProxyUtility(:,1),...
+     pathXY_ProxyUtility(:,2),...
+     'r-','LineWidth',2);
+
+% PSCA reference
+plot(Ref_Traj_ZOH(1,:),...
+     Ref_Traj_ZOH(2,:),...
+     'b--','LineWidth',2);
+
+% Start
+plot(pathXY_ProxyUtility(1,1),...
+     pathXY_ProxyUtility(1,2),...
+     'rs',...
+     'MarkerFaceColor','r',...
+     'HandleVisibility','off');
+
+% Finish
+plot(pathXY_ProxyUtility(end,1),...
+     pathXY_ProxyUtility(end,2),...
+     'rd',...
+     'MarkerFaceColor','r',...
+     'HandleVisibility','off');
+
+legend({'Rate samples',...
+        'BS',...
+        'Users',...
+        'User barycenter',...
+        'Dijkstra trajectory',...
+        'PSCA trajectory'},...
+        'Location','northoutside',...
+        'NumColumns',3);
+
+hold off;
 
 %% ------------------------------------------
 %  Communication metrics along all flights
