@@ -156,42 +156,64 @@ k_neighbors = 8;
 [pathXY_PU8] = optimalTrajectoryPU(Proxy_Utility_8, x_vals, y_vals, p_init, p_final, 'k', k_neighbors);
 
 disp('Trajectories generated successfully.');
+%% ------------------------------------------
+%  Figure: Reference Trajectories Comparison
+%  ------------------------------------------
+figure;
 
-%% ---------- PLOTTING RESULTS -------------------------------------------
-figure('Name','Reference Trajectories Comparison', 'Color','w', 'Position', [100 100 900 700]);
-hold on; grid on; axis equal;
+scatter(x_vals, y_vals, 12, Rmat, 'filled');      % colour = Σ-rate
+axis equal;
+grid on;
+colorbar;
+xlabel('x (m)');
+ylabel('y (m)');
+hold on;
 
-% 1. Plot Rate Cloud as Background
-scatter(x_vals, y_vals, 8, Rmat, 'filled', 'MarkerFaceAlpha', 0.6,'DisplayName', 'Rate samples');
-colormap(jet);
-cb = colorbar;
-ylabel(cb, 'Sum-Rate (bits/s)', 'FontSize', 12, 'FontWeight', 'bold');
+% BS
+p_bs = plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');
 
-% 2. Plot Nodes (BS & Users)
-plot(0, 0, 'ks', 'MarkerSize', 12, 'MarkerFaceColor', 'k', 'DisplayName', 'Base Station (BS)');
-plot(pK(1,:), pK(2,:), 'r^', 'MarkerSize', 10, 'MarkerFaceColor', 'r', 'DisplayName', 'Users');
-plot(p_bar_User(1), p_bar_User(2), 'mp', 'MarkerSize', 14, 'MarkerFaceColor', 'k', 'DisplayName', 'User Barycenter');
+% Users
+p_us = plot(pK(1,:),pK(2,:),'ro','MarkerSize',5,'MarkerFaceColor','r');
 
-% 3. Plot Paths
-plot(pathXY_Rate(:,1), pathXY_Rate(:,2), 'k-', 'LineWidth', 2.5, 'DisplayName', 'Optimal Rate Path');
-plot(pathXY_PU2(:,1),  pathXY_PU2(:,2),  'r--', 'LineWidth', 2.5, 'DisplayName', 'Proxy Utility (p=2)');
-plot(pathXY_PU5(:,1),  pathXY_PU5(:,2),  'g--', 'LineWidth', 2.5, 'DisplayName', 'Proxy Utility (p=5)');
-plot(pathXY_PU8(:,1),  pathXY_PU8(:,2),  'b--', 'LineWidth', 2.5, 'DisplayName', 'Proxy Utility  (p=8)');
+% User barycenter
+p_bar = plot(p_bar_User(1),p_bar_User(2), ...
+             'kp','MarkerSize',10,'MarkerFaceColor','m');
 
-% 4. Mark Start & End Points
-plot(p_init(1), p_init(2), 'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g', 'DisplayName', 'Start Position');
-plot(p_final(1), p_final(2), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', 'y', 'DisplayName', 'Final Position');
+% Reference trajectories
+p_rate = plot(pathXY_Rate(:,1),pathXY_Rate(:,2), ...
+              'k-','LineWidth',2);
 
-% Format Plot
-xlabel('x (m)', 'FontSize', 12, 'FontWeight', 'bold');
-ylabel('y (m)', 'FontSize', 12, 'FontWeight', 'bold');
-%title('Comparison of Reference Trajectories Generated via k-NN Graph', 'FontSize', 14);
-%legend('Location', 'bestoutside', 'FontSize', 11);
-legend('NumColumns',3,'Location','bestoutside','FontSize',11);
-xlim([xmin, xmax]);
-ylim([ymin, ymax]);
+p_pu2 = plot(pathXY_PU2(:,1),pathXY_PU2(:,2), ...
+             'r--','LineWidth',2);
+
+p_pu5 = plot(pathXY_PU5(:,1),pathXY_PU5(:,2), ...
+             'g--','LineWidth',2);
+
+p_pu8 = plot(pathXY_PU8(:,1),pathXY_PU8(:,2), ...
+             'b--','LineWidth',2);
+
+% Start and finish
+plot(p_init(1),p_init(2),'rs','MarkerFaceColor','r', ...
+     'HandleVisibility','off');
+
+plot(p_final(1),p_final(2),'rd','MarkerFaceColor','r', ...
+     'HandleVisibility','off');
+
+legend({'Rate samples', ...
+        'BS', ...
+        'Users', ...
+        'User barycenter', ...
+        'Optimal Rate Path', ...
+        'Proxy Utility (p=2)', ...
+        'Proxy Utility (p=5)', ...
+        'Proxy Utility (p=8)'}, ...
+       'Location','northoutside', ...
+       'NumColumns',2);
+
+xlim([xmin xmax]);
+ylim([ymin ymax]);
+
 hold off;
-
 
 
 save("Main_Ref_Traj.mat");
