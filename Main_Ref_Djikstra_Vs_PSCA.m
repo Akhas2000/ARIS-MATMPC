@@ -98,7 +98,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
 
 % Simulation Duration
-Tf_init =45;  % simulation time
+Tf_init =60;  % simulation time
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
@@ -379,8 +379,8 @@ Trans_DK_BP = cumsum(Total_DK_BP) ;
 
 
 figure; hold on;
-plot(Trans_PSCA_BP, 'r-', 'LineWidth', 2, 'DisplayName','PSCA-BP');
-plot(Trans_DK_BP, 'b-', 'LineWidth',1.5, 'DisplayName','DK-BP');
+plot(time_draw(1:end-1),Trans_PSCA_BP, 'r-', 'LineWidth', 2, 'DisplayName','PSCA-BP');
+plot(time_draw((1:end-1)),Trans_DK_BP, 'b-', 'LineWidth',1.5, 'DisplayName','DK-BP');
 
 
 xlabel('Time (s)'); ylabel('Cumulative sumrate of the reference trajectory (bit/s)');
@@ -394,7 +394,7 @@ legend('show','Location','best'); grid on;
 % ------------------------------------------
 
 K = size(RATES_DK_BP,2);     % number of users
-s = 1:size(RATES_DK_BP,1);   % path index
+s = time_draw(1:end-1);   % path index
 
 figure; hold on; grid on;
 
