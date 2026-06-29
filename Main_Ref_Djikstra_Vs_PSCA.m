@@ -279,8 +279,8 @@ legend({'Rate samples',...
         'BS',...
         'Users',...
         'User barycenter',...
-        'Dijkstra trajectory',...
-        'PSCA trajectory'},...
+        'PURG',...
+        'PSCA-RG'},...
         'Location','northoutside',...
         'NumColumns',3);
 
@@ -379,8 +379,9 @@ Trans_DK_BP = cumsum(Total_DK_BP) ;
 
 
 figure; hold on;
-plot(time_draw(1:end-1),Trans_PSCA_BP, 'r-', 'LineWidth', 2, 'DisplayName','PSCA-BP');
-plot(time_draw((1:end-1)),Trans_DK_BP, 'b-', 'LineWidth',1.5, 'DisplayName','DK-BP');
+plot(time_draw((1:end-1)),Trans_DK_BP, 'b-', 'LineWidth',1.5, 'DisplayName','PURG');
+plot(time_draw(1:end-1),Trans_PSCA_BP, 'r-', 'LineWidth', 2, 'DisplayName','PSCA-RG');
+
 
 
 xlabel('Time (s)'); ylabel('Cumulative sumrate of the reference trajectory (bit/s)');
@@ -402,17 +403,17 @@ for k = 1:K
     % DK trajectory
     plot(s, RATES_DK_BP(:,k), '-', ...
         'LineWidth', 1.8, ...
-        'DisplayName', sprintf('User %d (DK)',k));
+        'DisplayName', sprintf('User %d (PURG)',k));
 
     % PSCA trajectory
     plot(s, RATES_PSCA_BP(:,k), '--', ...
         'LineWidth', 1.8, ...
-        'DisplayName', sprintf('User %d (PSCA)',k));
+        'DisplayName', sprintf('User %d (PSCA-RG)',k));
 end
 
 xlabel('Path point index');
 ylabel('User rate (bit/s)');
-title('User data rates along the trajectory');
+%title('User data rates along the trajectory');
 
 legend('Location','eastoutside');
 
@@ -425,7 +426,7 @@ plot3(p_init_PSCA(1), p_init_PSCA(2), p_init_PSCA(3), 'gs', 'MarkerSize', 10, 'M
 plot3(p_final_PSCA(1), p_final_PSCA(2), p_final_PSCA(3), 'rs', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
 scatter3(pK(1,:), pK(2,:), pK(3,:), 80, 'k', 'filled', '^');
 xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]');
-title('3-Block PSCA Optimized Reference Trajectory');
+%title('3-Block PSCA Optimized Reference Trajectory');
 legend('UAV Path', 'Start', 'End', 'Users');
 view(3);
 
@@ -435,7 +436,7 @@ plot(1:length(obj_evolution), obj_evolution, '-o', 'LineWidth', 2, 'MarkerSize',
 grid on;
 xlabel('PSCA Iteration');
 ylabel('Total Network Sum Rate [Mbps]');
-title('Objective Function Evolution');
+%title('Objective Function Evolution');
 xlim([1, max(2, length(obj_evolution))]);
 
 
