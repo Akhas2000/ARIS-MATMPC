@@ -376,15 +376,16 @@ end
 %  ------------------------------------------
 Trans_PSCA_BP = cumsum(Total_PSCA_BP) ;
 Trans_DK_BP = cumsum(Total_DK_BP) ;
-
+blue   = [0 0 255]/255;
+red    = [220 20 60]/255;
 
 figure; hold on;
-plot(time_draw((1:end-1)),Trans_DK_BP, 'b-', 'LineWidth',1.5, 'DisplayName','PURG');
-plot(time_draw(1:end-1),Trans_PSCA_BP, 'r-', 'LineWidth', 2, 'DisplayName','PSCA-RG');
+plot(time_draw((1:end-1)),Trans_DK_BP, '-','Color',blue, 'LineWidth',1.5, 'DisplayName','PURG');
+plot(time_draw(1:end-1),Trans_PSCA_BP, '-','Color',red, 'LineWidth', 2, 'DisplayName','PSCA-RG');
 
 
 
-xlabel('Time (s)'); ylabel('Cumulative sumrate of the reference trajectory (bit/s)');
+xlabel('Time (s)'); ylabel('Cumulative sumrate (bit/s)');
 legend('show','Location','best'); grid on;
 
 
