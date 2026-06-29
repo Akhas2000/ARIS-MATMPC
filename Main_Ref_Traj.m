@@ -156,6 +156,7 @@ k_neighbors = 8;
 [pathXY_PU8] = optimalTrajectoryPU(Proxy_Utility_8, x_vals, y_vals, p_init, p_final, 'k', k_neighbors);
 
 disp('Trajectories generated successfully.');
+
 %% ------------------------------------------
 %  Figure: Reference Trajectories Comparison
 %  ------------------------------------------
@@ -214,6 +215,78 @@ xlim([xmin xmax]);
 ylim([ymin ymax]);
 
 hold off;
+
+
+
+%% =====================================================
+% Densify trajectories to Ns samples
+%% =====================================================
+
+Tf = Tf_init;
+Ns = round(Tf/Ts);
+
+trajList = {pathXY_Rate, pathXY_PU2, pathXY_PU5, pathXY_PU8};
+
+figure;
+hold on; grid on;
+
+styles = {'k-','r--','g-.','b:'};
+
+time = (0:Ns-1)*Ts;
+
+for t = 1:length(trajList)
+
+    path = trajList{t};
+
+    % Original parameter
+    s0 = linspace(0,1,size(path,1));
+
+    % New parameter
+    s = linspace(0,1,Ns);
+
+    % Densified trajectory
+    pathDense(:,1) = interp1(s0,path(:,1),s,'pchip');
+    pathDense(:,2) = interp1(s0,path(:,2),s,'pchip');
+
+    rate = zeros(Ns,1);
+
+    for k = 1:Ns
+
+        pU = [pathDense(k,1), pathDense(k,2), h_UAV];
+
+        f_phases = array_response_phases_BS(pA,pU,freq);
+
+        P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
+        P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
+
+        theta = P_A_tx_RIS - P_A_rx_RIS;
+
+        Rates = Rates_No_Complex_phase(...
+            pA,pR,pU,pK,R,theta,...
+            f_phases,Power,Bandwidth,...
+            freq,beta_B,beta_R);
+
+        rate(k) = sum(Rates);
+
+    end
+
+    cumulativeRate = cumsum(rate);
+
+    plot(time,cumulativeRate,...
+        styles{t},'LineWidth',2);
+
+end
+
+xlabel('Time (s)');
+ylabel('Cumulative Data Rate');
+legend('RRG',...
+       'PURG (\gamma=2)',...
+       'PURG (\gamma=5)',...
+       'PURG (\gamma=8)',...
+       'Location','northwest');
+
+xlim([0 Tf]);
+set(gca,'FontSize',12);
 
 
 save("Main_Ref_Traj.mat");
