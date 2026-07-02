@@ -99,16 +99,20 @@ figure; hold on; grid on; box on;
 plot(K_set, Tot_HoT_BP, '-o', 'LineWidth', 1.5, 'DisplayName', 'HoT-BP');
 plot(K_set, Tot_NoT_BP, '-s', 'LineWidth', 1.5, 'DisplayName', 'NoT-BP');
 
-% Plot the new Benchmarks
-plot(K_set, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL-BP');
-plot(K_set, Tot_HOV_BP, '-p', 'Color', teal,   'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
+
 
 plot(K_set, Tot_HoT_P,  '-^', 'LineWidth', 1.5, 'DisplayName', 'HoT-P');
 plot(K_set, Tot_NoT_P,  '-v', 'LineWidth', 1.5, 'DisplayName', 'NoT-P');
+
+
+% Plot the new Benchmarks
+plot(K_set, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL-BP');
+%plot(K_set, Tot_HOV_BP, '-p', 'Color', teal,   'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
+
 plot(K_set, Tot_HoT_B,  '-d', 'LineWidth', 1.5, 'DisplayName', 'HoT-B');
 plot(K_set, Tot_NoT_B,  '-x', 'LineWidth', 1.5, 'DisplayName', 'NoT-B');
 
-xlabel('Number of Users (K)');
+xlabel('Number of Users (I)');
 ylabel('Total Transmitted Data');
 %title('Performance Comparison of All Schemes');
 legend('Location', 'Best');
