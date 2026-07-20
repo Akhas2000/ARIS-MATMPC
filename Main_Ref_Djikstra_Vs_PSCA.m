@@ -228,14 +228,24 @@ smooth_win = 5;   % odd window length; increase for more smoothing
 %  single-column) so fonts/lines do NOT get shrunk when included
 %  in LaTeX. Tune FIGSIZE if your column width differs.
 %  ============================
-FS      = 20;                % axis / tick label font size
-FSL     = 16;                 % legend font size
-LW      = 2.5;                % standard line width
-LWth    = 3.5;                 % thicker/emphasis line width
-MS      = 9;                  % standard marker size
-MS_big  = 12;                  % larger marker size (scatter highlights)
-AXLW    = 1.5;                 % axis box line width
-FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+% FS      = 20;                % axis / tick label font size
+% FSL     = 16;                 % legend font size
+% LW      = 2.5;                % standard line width
+% LWth    = 3.5;                 % thicker/emphasis line width
+% MS      = 9;                  % standard marker size
+% MS_big  = 12;                  % larger marker size (scatter highlights)
+% AXLW    = 1.5;                 % axis box line width
+% FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+% 
+
+FS      = 10;                % axis / tick label font size
+FSL     = 3;                 % legend font size
+LW      = 1.5;                % standard line width
+LWth    = 1.5;                 % thicker/emphasis line width
+MS      = 6;                  % standard marker size
+MS_big  = 6;                  % larger marker size (scatter highlights)
+AXLW    = 0.5;                 % axis box line width
+% FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
 
 
 
@@ -315,7 +325,7 @@ cb = colorbar;
 cb.Label.String = 'Total network rate (bit/s)';
 cb.Label.FontSize = FSL;
 
-set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -424,7 +434,7 @@ xlabel('Time (s)'); ylabel('Cumulative sumrate (bit/s)');
 legend('show','Location','best'); grid on;
 
 
-set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -459,7 +469,7 @@ ylabel('User rate (bit/s)');
 legend('Location','eastoutside');
 
 
-set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -476,7 +486,7 @@ legend('UAV Path', 'Start', 'End', 'Users');
 view(3);
 
 
-set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -491,7 +501,7 @@ ylabel('Total Network Sum Rate [Mbps]');
 xlim([1, max(2, length(obj_evolution))]);
 
 
-set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 

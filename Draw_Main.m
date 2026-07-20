@@ -17,16 +17,27 @@ addpath(genpath('Functions'));
 % FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
 
 
-                             %   breathing room without shrinking the plot area
+FS      = 10;                % axis / tick label font size
+FSL     = 3;                 % legend font size
+LW      = 1.5;                % standard line width
+LWth    = 1.5;                 % thicker/emphasis line width
+MS      = 6;                  % standard marker size
+MS_big  = 6;                  % larger marker size (scatter highlights)
+AXLW    = 0.5;                 % axis box line width
+% FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
 
-FS      = 10;               % axis / tick label font size (MATLAB default)
-FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
-LW      = 0.5;               % standard line width (MATLAB default)
-LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
-MS      = 6;                 % standard marker size (MATLAB default)
-MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
-AXLW    = 0.5;                % axis box line width (MATLAB default)
-FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
+
+
+                             %   breathing room without shrinking the plot area
+% 
+% FS      = 10;               % axis / tick label font size (MATLAB default)
+% FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
+% LW      = 0.5;               % standard line width (MATLAB default)
+% LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
+% MS      = 6;                 % standard marker size (MATLAB default)
+% MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
+% AXLW    = 0.5;                % axis box line width (MATLAB default)
+% FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
 
 
 %% Plot results
@@ -111,7 +122,7 @@ switch settings.model
             
 
             % Set physical figure size close to your intended print size (single column ≈ 3.5in wide)
-            set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
+            %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
             
             % Bump up font sizes BEFORE export so they're readable at final print size
             set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
@@ -218,7 +229,7 @@ switch settings.model
 
 
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -282,7 +293,7 @@ switch settings.model
         linkaxes(ax,'x');
         xlim([min([t_NoT(:); t_HoT(:)]), max([t_NoT(:); t_HoT(:)])]);
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -435,7 +446,7 @@ switch settings.model
         xlabel('Time (s)'); ylabel('User data rate (bit/s)');
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -523,7 +534,7 @@ switch settings.model
         legend(leg_handles, leg_labels, 'Location','northoutside','NumColumns',3);
 
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -550,7 +561,7 @@ switch settings.model
         xlabel('Time (s)'); ylabel('Total network rate (bit/s)');
         legend('show','Location','best'); grid on;
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -573,7 +584,7 @@ switch settings.model
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; 
         
         
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -660,7 +671,7 @@ switch settings.model
         % =========================
         % Figure size for LaTeX export
         % =========================
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         
         hold off;
@@ -700,7 +711,7 @@ switch settings.model
         xlabel('Time (s)'); ylabel('Cumulative transmitted data (bit)');
         legend('show','Location','best'); grid on;
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -727,7 +738,7 @@ switch settings.model
         lgd = legend('v (HoT)','$\bar{v}$','Interpreter','latex');
         lgd.FontSize = FSL;   
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -742,7 +753,7 @@ switch settings.model
         xlabel('Time (s)'); ylabel('Angular velocity (rad/s)');
         legend('show'); grid on; 
         
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -778,7 +789,7 @@ switch settings.model
         end
         xlabel('Time (s)');
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -807,7 +818,7 @@ switch settings.model
         xlabel('Time (s)'); ylabel('Euler angles (deg)');
         legend('show'); grid on; 
         
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -915,7 +926,7 @@ switch settings.model
         grid on; ylabel('$$\|\log(q \circ q_d^\star)\|$$','Interpreter','latex');
         xlabel('Time (s)');
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -1012,7 +1023,7 @@ switch settings.model
         ax = findall(gcf,'Type','axes');
         linkaxes(ax,'x');
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -1070,7 +1081,7 @@ switch settings.model
         cb.Ticks = [0.25 0.75];
         cb.TickLabels = {'Violation','Satisfied'};
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -1091,7 +1102,7 @@ switch settings.model
         legend show;
         grid on;
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
@@ -1154,7 +1165,7 @@ switch settings.model
                'Location', 'northoutside', 'NumColumns', 2);
 
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
                
@@ -1179,7 +1190,7 @@ switch settings.model
         legend show;
         grid on;
 
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -1203,7 +1214,7 @@ switch settings.model
         
         grid on;
         box on;
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
@@ -1226,7 +1237,7 @@ switch settings.model
         
         grid on;
         box on;
-        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
