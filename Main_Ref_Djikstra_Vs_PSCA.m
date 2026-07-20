@@ -57,7 +57,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 50;             % No. of shooting points
+N  = 15;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -98,7 +98,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
 
 % Simulation Duration
-Tf_init =60;  % simulation time
+Tf_init =80;  % simulation time
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
@@ -222,6 +222,33 @@ smooth_win = 5;   % odd window length; increase for more smoothing
 
 
 
+%% ============================
+%  GLOBAL STYLE SETTINGS (for LaTeX-ready figures)
+%  Figures are exported at their final print size (3.5 in wide,
+%  single-column) so fonts/lines do NOT get shrunk when included
+%  in LaTeX. Tune FIGSIZE if your column width differs.
+%  ============================
+FS      = 20;                % axis / tick label font size
+FSL     = 16;                 % legend font size
+LW      = 2.5;                % standard line width
+LWth    = 3.5;                 % thicker/emphasis line width
+MS      = 9;                  % standard marker size
+MS_big  = 12;                  % larger marker size (scatter highlights)
+AXLW    = 1.5;                 % axis box line width
+FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+
+
+
+
+% FS      = 10;               % axis / tick label font size (MATLAB default)
+% FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
+% LW      = 0.5;               % standard line width (MATLAB default)
+% LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
+% MS      = 6;                 % standard marker size (MATLAB default)
+% MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
+% AXLW    = 0.5;                % axis box line width (MATLAB default)
+% FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
+
 
 %% ------------------------------------------
 % Reference Trajectories Comparison
@@ -238,28 +265,28 @@ ylabel('y (m)');
 hold on;
 
 % BS
-plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');
+plot(0, 0,'rs','MarkerSize', MS_big,'MarkerFaceColor','r');
 
 % Users
 plot(pK(1,:),pK(2,:),'ro',...
-    'MarkerSize',6,...
+    'MarkerSize', MS,...
     'MarkerFaceColor','r');
 
 % Barycenter
 plot(p_bar_User(1),p_bar_User(2),...
     'kp',...
-    'MarkerSize',10,...
+    'MarkerSize', MS_big,...
     'MarkerFaceColor','m');
 
 % Dijkstra reference
 plot(pathXY_ProxyUtility(:,1),...
      pathXY_ProxyUtility(:,2),...
-     'r-','LineWidth',2);
+     'r-','LineWidth', LWth);
 
 % PSCA reference
 plot(Ref_Traj_ZOH(1,:),...
      Ref_Traj_ZOH(2,:),...
-     'b--','LineWidth',2);
+     'b--','LineWidth', LWth);
 
 % Start
 plot(pathXY_ProxyUtility(1,1),...
@@ -283,6 +310,14 @@ legend({'Rate samples',...
         'PSCA-RG'},...
         'Location','northoutside',...
         'NumColumns',3);
+
+cb = colorbar;
+cb.Label.String = 'Total network rate (bit/s)';
+cb.Label.FontSize = FSL;
+
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 hold off;
 
@@ -380,13 +415,18 @@ blue   = [0 0 255]/255;
 red    = [220 20 60]/255;
 
 figure; hold on;
-plot(time_draw((1:end-1)),Trans_DK_BP, '-','Color',blue, 'LineWidth',1.5, 'DisplayName','PURG');
-plot(time_draw(1:end-1),Trans_PSCA_BP, '-','Color',red, 'LineWidth', 2, 'DisplayName','PSCA-RG');
+plot(time_draw((1:end-1)),Trans_DK_BP, '-','Color',blue, 'LineWidth', LW, 'DisplayName','PURG');
+plot(time_draw(1:end-1),Trans_PSCA_BP, '-','Color',red, 'LineWidth', LWth, 'DisplayName','PSCA-RG');
 
 
 
 xlabel('Time (s)'); ylabel('Cumulative sumrate (bit/s)');
 legend('show','Location','best'); grid on;
+
+
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
 
@@ -403,12 +443,12 @@ figure; hold on; grid on;
 for k = 1:K
     % DK trajectory
     plot(s, RATES_DK_BP(:,k), '-', ...
-        'LineWidth', 1.8, ...
+        'LineWidth', LW, ...
         'DisplayName', sprintf('User %d (PURG)',k));
 
     % PSCA trajectory
     plot(s, RATES_PSCA_BP(:,k), '--', ...
-        'LineWidth', 1.8, ...
+        'LineWidth', LW, ...
         'DisplayName', sprintf('User %d (PSCA-RG)',k));
 end
 
@@ -419,26 +459,41 @@ ylabel('User rate (bit/s)');
 legend('Location','eastoutside');
 
 
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
 
 % Plot Trajectory
 figure('Name', 'PSCA Reference Trajectory'); hold on; grid on;
-plot3(P_bar(1,:), P_bar(2,:), P_bar(3,:), 'b-o', 'LineWidth', 2, 'MarkerSize', 4);
-plot3(p_init_PSCA(1), p_init_PSCA(2), p_init_PSCA(3), 'gs', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
-plot3(p_final_PSCA(1), p_final_PSCA(2), p_final_PSCA(3), 'rs', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
-scatter3(pK(1,:), pK(2,:), pK(3,:), 80, 'k', 'filled', '^');
+plot3(P_bar(1,:), P_bar(2,:), P_bar(3,:), 'b-o', 'LineWidth', LWth, 'MarkerSize', MS);
+plot3(p_init_PSCA(1), p_init_PSCA(2), p_init_PSCA(3), 'gs', 'MarkerSize', MS_big, 'MarkerFaceColor', 'g');
+plot3(p_final_PSCA(1), p_final_PSCA(2), p_final_PSCA(3), 'rs', 'MarkerSize', MS_big, 'MarkerFaceColor', 'r');
+scatter3(pK(1,:), pK(2,:), pK(3,:), 112,'k', 'filled', '^');
 xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]');
 %title('3-Block PSCA Optimized Reference Trajectory');
 legend('UAV Path', 'Start', 'End', 'Users');
 view(3);
 
+
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
+
 % Plot Objective Evolution
 figure('Name', 'Objective Function Evolution');
-plot(1:length(obj_evolution), obj_evolution, '-o', 'LineWidth', 2, 'MarkerSize', 6);
+plot(1:length(obj_evolution), obj_evolution, '-o', 'LineWidth', LWth, 'MarkerSize', MS);
 grid on;
 xlabel('PSCA Iteration');
 ylabel('Total Network Sum Rate [Mbps]');
 %title('Objective Function Evolution');
 xlim([1, max(2, length(obj_evolution))]);
+
+
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
 save("Main_Ref_Djikstra_Vs_PSCA.mat")

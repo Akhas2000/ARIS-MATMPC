@@ -57,7 +57,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 50;             % No. of shooting points
+N  = 15;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -98,7 +98,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation: Only Added part to the original Simulation file of MATMPC
 
 % Simulation Duration
-Tf_init =60;  % simulation time
+Tf_init =80;  % simulation time
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x

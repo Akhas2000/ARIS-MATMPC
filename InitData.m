@@ -49,7 +49,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             q_sv=2*1e-12;
             q_p=6;
             q_h=10;
-            q_v=1;
+            q_v=1.1;
             
 
 

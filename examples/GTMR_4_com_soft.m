@@ -222,7 +222,7 @@ general_con_N = norm_v;
 
 
 %% discretization
-Ts_st = 0.05;
+Ts_st = 0.08;
 
 
 %% Functions 

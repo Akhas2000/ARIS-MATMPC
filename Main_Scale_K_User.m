@@ -90,31 +90,54 @@ end
 
 %% ---- Plot Results ----
 
+
+%% ============================
+%  GLOBAL STYLE SETTINGS (for LaTeX-ready figures)
+%  Figures are exported at their final print size (3.5 in wide,
+%  single-column) so fonts/lines do NOT get shrunk when included
+%  in LaTeX. Tune FIGSIZE if your column width differs.
+%  ============================
+FS      = 20;                % axis / tick label font size
+FSL     = 16;                 % legend font size
+LW      = 2.5;                % standard line width
+LWth    = 3.5;                 % thicker/emphasis line width
+MS      = 9;                  % standard marker size
+MS_big  = 12;                  % larger marker size (scatter highlights)
+AXLW    = 1.5;                 % axis box line width
+FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+
+
+
+% FS      = 10;               % axis / tick label font size (MATLAB default)
+% FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
+% LW      = 0.5;               % standard line width (MATLAB default)
+% LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
+% MS      = 6;                 % standard marker size (MATLAB default)
+% MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
+% AXLW    = 0.5;                % axis box line width (MATLAB default)
+% FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
+
 % Define specific colors for the new plots to match the previous aesthetic
-purple = [148 0 211]/255;  
-teal   = [0 128 128]/255;  
-
+purple = [148 0 211]/255;
+teal   = [0 128 128]/255;
 figure; hold on; grid on; box on;
-
-plot(K_set, Tot_HoT_BP, '-o', 'LineWidth', 1.5, 'DisplayName', 'HoT-BP');
-plot(K_set, Tot_NoT_BP, '-s', 'LineWidth', 1.5, 'DisplayName', 'NoT-BP');
-
-
-
-plot(K_set, Tot_HoT_P,  '-^', 'LineWidth', 1.5, 'DisplayName', 'HoT-P');
-plot(K_set, Tot_NoT_P,  '-v', 'LineWidth', 1.5, 'DisplayName', 'NoT-P');
-
-
+plot(K_set, Tot_HoT_BP, '-o', 'LineWidth', LW, 'DisplayName', 'HoT-BP');
+plot(K_set, Tot_NoT_BP, '-s', 'LineWidth', LW, 'DisplayName', 'NoT-BP');
+plot(K_set, Tot_HoT_P,  '-^', 'LineWidth', LW, 'DisplayName', 'HoT-P');
+plot(K_set, Tot_NoT_P,  '-v', 'LineWidth', LW, 'DisplayName', 'NoT-P');
 % Plot the new Benchmarks
-plot(K_set, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL-BP');
-%plot(K_set, Tot_HOV_BP, '-p', 'Color', teal,   'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
-
-plot(K_set, Tot_HoT_B,  '-d', 'LineWidth', 1.5, 'DisplayName', 'HoT-B');
-plot(K_set, Tot_NoT_B,  '-x', 'LineWidth', 1.5, 'DisplayName', 'NoT-B');
-
+plot(K_set, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', LW, 'DisplayName', 'SL-BP');
+%plot(K_set, Tot_HOV_BP, '-p', 'Color', teal,   'LineWidth', LW, 'DisplayName', 'HOV-BP');
+plot(K_set, Tot_HoT_B,  '-d', 'LineWidth', LW, 'DisplayName', 'HoT-B');
+plot(K_set, Tot_NoT_B,  '-x', 'LineWidth', LW, 'DisplayName', 'NoT-B');
 xlabel('Number of Users (I)');
 ylabel('Total Transmitted Data');
 %title('Performance Comparison of All Schemes');
 legend('Location', 'Best');
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
+
 
 save("Data_Scale_K_USER_Vs_Transmitted_Data.mat")

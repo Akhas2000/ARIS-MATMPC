@@ -61,7 +61,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 50;             % No. of shooting points
+N  = 15;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -84,7 +84,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation
 
 % Simulation Duration
-Tf_init = 60;  % simulation time
+Tf_init = 80;  % simulation time
 Tf = Tf_init;
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
@@ -173,7 +173,7 @@ q_omega=0;
 q_sv=2*1e-12;
 q_p=6;
 q_h=10;
-q_v=1;
+q_v=1.1;
 
 sv_init = 0;
 sv_max  = 7*1e7;
@@ -188,7 +188,7 @@ q_omega=30;
 q_sv=2*1e-12;
 q_p=6;
 q_h=10;
-q_v=1;
+q_v=1.1;
 
 sv_init = 0;
 sv_max  = 7*1e7;
@@ -209,7 +209,7 @@ q_omega=30;
 q_sv=2*1e-12;
 q_p=6;
 q_h=10;
-q_v=1;
+q_v=1.1;
 
 sv_init = 0;
 sv_max  = 7*1e7;

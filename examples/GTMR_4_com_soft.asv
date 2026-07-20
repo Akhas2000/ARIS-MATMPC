@@ -9,12 +9,10 @@ addpath(genpath('Functions'));
 
 %------------------------------------------%
 %% Communication variables
-K_User = settings.K_User;
-N_A    = settings.N_A;
-M_size = settings.M_size;
+K_User = 5;
+N_A = 3; % Antenna elements
+M_size = [4,4];
 
-
-R_min=settings.R_min;
 
 M_ele = M_size(1) * M_size(2); % RIS elements
 
@@ -23,6 +21,7 @@ beta_dB = -30;
 beta_B = 10^(beta_dB / 10);
 beta_R = 10^(beta_dB / 10);
 
+R_min=1*10^6;
 
 
 %% Dimensions
@@ -223,7 +222,7 @@ general_con_N = norm_v;
 
 
 %% discretization
-Ts_st = 0.08;
+Ts_st = 0.085;
 
 
 %% Functions 

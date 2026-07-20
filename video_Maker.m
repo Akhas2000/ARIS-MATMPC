@@ -13,7 +13,7 @@
 
 %% === SETTINGS ===
 frameRate = 15;                       
-video_filename = 'UAV_Flight_Trajectory_HoT.avi';
+video_filename = 'UAV_Flight_Trajectory_NoT.avi';
 
 
 
@@ -28,10 +28,10 @@ state_sim=state_HoT;
 pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
 color_benchmark=[0.4660 0.6740 0.1880 ];%green
 
-% %NoT
-% state_sim=state_NoT;
-% pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
-% color_benchmark=[ 0.0000 0.4470 0.7410 ];%blue
+%NoT
+state_sim=state_NoT;
+pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
+color_benchmark=[ 0.0000 0.4470 0.7410 ];%blue
 
 
 %% === Compute Frame Sampling Step ===
@@ -114,7 +114,7 @@ for i = 1:step:N
 
     % --- Users ---
     for k = 1:size(pK, 2)
-        scatter3(pK(1,k), pK(2,k), pK(3,k), 300, 'ro', 'filled');
+        scatter3(pK(1,k), pK(2,k), pK(3,k), 50, 'ro', 'filled');
     end
 
     % --- Reference Trajectory ---

@@ -55,7 +55,7 @@ nbx = settings.nbx;  % No. of state bounds
 
 %% solver configurations
 
-N  = 50;             % No. of shooting points
+N  = 15;             % No. of shooting points
 settings.N = N;
 
 N2 = N/5;
@@ -77,7 +77,7 @@ opt.RTI             = 'yes'; % if use Real-time Iteration
 %% Reference Trajectory Generation
 
 % Simulation Duration
-Tf_init = 60;  % simulation time
+Tf_init = 80;  % simulation time
 
 % ---------- AREA & RANDOM CLOUD SIZE ----------------------------------
 xmin = -200;  xmax =  200;            % [m] rectangle in x
@@ -141,6 +141,8 @@ for n = 1:Nrand
 end
 disp('Cloud evaluation complete.');
 
+
+
 %% ---------- OPTIMAL TRAJECTORIES (k-NN graph) ---------------------------
 disp('Generating optimal trajectories...');
 k_neighbors = 8;
@@ -157,11 +159,38 @@ k_neighbors = 8;
 
 disp('Trajectories generated successfully.');
 
+
+
+%% ============================
+%  GLOBAL STYLE SETTINGS (for LaTeX-ready figures)
+%  Figures are exported at their final print size (3.5 in wide,
+%  single-column) so fonts/lines do NOT get shrunk when included
+%  in LaTeX. Tune FIGSIZE if your column width differs.
+%  ============================
+FS      = 20;                % axis / tick label font size
+FSL     = 16;                 % legend font size
+LW      = 2.5;                % standard line width
+LWth    = 3.5;                 % thicker/emphasis line width
+MS      = 9;                  % standard marker size
+MS_big  = 12;                  % larger marker size (scatter highlights)
+AXLW    = 1.5;                 % axis box line width
+FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+
+
+
+% FS      = 10;               % axis / tick label font size (MATLAB default)
+% FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
+% LW      = 0.5;               % standard line width (MATLAB default)
+% LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
+% MS      = 6;                 % standard marker size (MATLAB default)
+% MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
+% AXLW    = 0.5;                % axis box line width (MATLAB default)
+% FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
+
 %% ------------------------------------------
 %  Figure: Reference Trajectories Comparison
 %  ------------------------------------------
 figure;
-
 scatter(x_vals, y_vals, 12, Rmat, 'filled');      % colour = Σ-rate
 axis equal;
 grid on;
@@ -169,124 +198,98 @@ colorbar;
 xlabel('x (m)');
 ylabel('y (m)');
 hold on;
-
 % BS
-p_bs = plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');
-
+p_bs = plot(0, 0,'rs','MarkerSize', MS_big,'MarkerFaceColor','r');
 % Users
-p_us = plot(pK(1,:),pK(2,:),'ro','MarkerSize',5,'MarkerFaceColor','r');
-
+p_us = plot(pK(1,:),pK(2,:),'ro','MarkerSize', MS,'MarkerFaceColor','r');
 % User barycenter
 p_bar = plot(p_bar_User(1),p_bar_User(2), ...
-             'kp','MarkerSize',10,'MarkerFaceColor','m');
-
+'kp','MarkerSize', MS_big,'MarkerFaceColor','m');
 % Reference trajectories
 p_rate = plot(pathXY_Rate(:,1),pathXY_Rate(:,2), ...
-              'k-','LineWidth',2);
-
+'k-','LineWidth', LWth);
 p_pu2 = plot(pathXY_PU2(:,1),pathXY_PU2(:,2), ...
-             'r--','LineWidth',2);
-
+'r--','LineWidth', LWth);
 p_pu5 = plot(pathXY_PU5(:,1),pathXY_PU5(:,2), ...
-             'g--','LineWidth',2);
-
+'g--','LineWidth', LWth);
 p_pu8 = plot(pathXY_PU8(:,1),pathXY_PU8(:,2), ...
-             'b--','LineWidth',2);
-
+'b--','LineWidth', LWth);
 % Start and finish
 plot(p_init(1),p_init(2),'rs','MarkerFaceColor','r', ...
-     'HandleVisibility','off');
-
+'HandleVisibility','off');
 plot(p_final(1),p_final(2),'rd','MarkerFaceColor','r', ...
-     'HandleVisibility','off');
-
+'HandleVisibility','off');
 legend({'Rate samples', ...
-        'BS', ...
-        'Users', ...
-        'User barycenter', ...
-        'RRG', ...
-        'PURG (\gamma=2)', ...
-        'PURG (\gamma=5)', ...
-        'PURG (\gamma=8)'}, ...
-       'Location','northoutside', ...
-       'NumColumns',2);
-
-xlim([xmin xmax]);
-ylim([ymin ymax]);
-
+'BS', ...
+'Users', ...
+'User barycenter', ...
+'RRG', ...
+'PURG (\gamma=2)', ...
+'PURG (\gamma=5)', ...
+'PURG (\gamma=8)'}, ...
+'Location','northoutside', ...
+'NumColumns',2);
+% --- Match reference PDF axis limits ---
+lim_xmin = -250; lim_xmax = 250;
+lim_ymin = -199.99; lim_ymax = 199.99;
+xlim([lim_xmin lim_xmax]);
+ylim([lim_ymin lim_ymax]);
+cb = colorbar;
+cb.Label.String = 'Total network rate (bit/s)';
+cb.Label.FontSize = FSL;
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 hold off;
-
-
 
 %% =====================================================
 % Densify trajectories to Ns samples
 %% =====================================================
-
 Tf = Tf_init;
 Ns = round(Tf/Ts);
-
 trajList = {pathXY_Rate, pathXY_PU2, pathXY_PU5, pathXY_PU8};
-
 figure;
 hold on; grid on;
-
 styles = {'k-','r--','g-.','b:'};
-
 time = (0:Ns-1)*Ts;
-
 for t = 1:length(trajList)
-
     path = trajList{t};
-
-    % Original parameter
+% Original parameter
     s0 = linspace(0,1,size(path,1));
-
-    % New parameter
+% New parameter
     s = linspace(0,1,Ns);
-
-    % Densified trajectory
+% Densified trajectory
     pathDense(:,1) = interp1(s0,path(:,1),s,'pchip');
     pathDense(:,2) = interp1(s0,path(:,2),s,'pchip');
-
     rate = zeros(Ns,1);
-
-    for k = 1:Ns
-
+for k = 1:Ns
         pU = [pathDense(k,1), pathDense(k,2), h_UAV];
-
         f_phases = array_response_phases_BS(pA,pU,freq);
-
         P_A_rx_RIS = phase_array_response_RIS(pR,pU,[],R,freq);
         P_A_tx_RIS = phase_array_response_RIS(pR,pU,p_bar_User,R,freq);
-
         theta = P_A_tx_RIS - P_A_rx_RIS;
-
         Rates = Rates_No_Complex_phase(...
             pA,pR,pU,pK,R,theta,...
             f_phases,Power,Bandwidth,...
             freq,beta_B,beta_R);
-
         rate(k) = sum(Rates);
-
-    end
-
-    cumulativeRate = cumsum(rate);
-
-    plot(time,cumulativeRate,...
-        styles{t},'LineWidth',2);
-
 end
-
+    cumulativeRate = cumsum(rate);
+    plot(time,cumulativeRate,...
+        styles{t},'LineWidth', LWth);
+end
 xlabel('Time (s)');
 ylabel('Cumulative Data Rate');
 legend('RRG',...
-       'PURG (\gamma=2)',...
-       'PURG (\gamma=5)',...
-       'PURG (\gamma=8)',...
-       'Location','northwest');
-
+'PURG (\gamma=2)',...
+'PURG (\gamma=5)',...
+'PURG (\gamma=8)',...
+'Location','northwest');
 xlim([0 Tf]);
-set(gca,'FontSize',12);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
 save("Main_Ref_Traj.mat");

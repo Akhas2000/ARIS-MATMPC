@@ -1,6 +1,33 @@
 % Add the path to the functions
 addpath(genpath('Functions'));
 
+%% ============================
+%  GLOBAL STYLE SETTINGS (for LaTeX-ready figures)
+%  Figures are exported at their final print size (3.5 in wide,
+%  single-column) so fonts/lines do NOT get shrunk when included
+%  in LaTeX. Tune FIGSIZE if your column width differs.
+% ============================
+% FS      = 20;                % axis / tick label font size
+% FSL     = 16;                 % legend font size
+% LW      = 2.5;                % standard line width
+% LWth    = 3.5;                 % thicker/emphasis line width
+% MS      = 9;                  % standard marker size
+% MS_big  = 12;                  % larger marker size (scatter highlights)
+% AXLW    = 1.5;                 % axis box line width
+% FIGSIZE = [0 0 3.5 2.8];        % figure physical size in inches (match \includegraphics width)
+
+
+                             %   breathing room without shrinking the plot area
+
+FS      = 10;               % axis / tick label font size (MATLAB default)
+FSL     = 9;                 % legend font size (MATLAB default, slightly below axis)
+LW      = 0.5;               % standard line width (MATLAB default)
+LWth    = 0.5;                % MATLAB has no separate "thick" default — same as LW
+MS      = 6;                 % standard marker size (MATLAB default)
+MS_big  = 6;                  % MATLAB has no separate "big" default — same as MS
+AXLW    = 0.5;                % axis box line width (MATLAB default)
+FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
+
 
 %% Plot results
 
@@ -58,17 +85,17 @@ switch settings.model
             hold on;
         
             % BS + users + planned path
-            p_bs = plot(0,0,'rs','MarkerSize',10,'MarkerFaceColor','r');             % BS
-            p_us = plot(pK(1,:), pK(2,:), 'ro','MarkerSize',5,'MarkerFaceColor','r');% users
-            p_pt = plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth',2);                % path
+            p_bs = plot(0, 0,'rs','MarkerSize', MS_big,'MarkerFaceColor','r');             % BS
+            p_us = plot(pK(1,:), pK(2,:), 'ro','MarkerSize', MS,'MarkerFaceColor','r');% users
+            p_pt = plot(pathXY(:,1), pathXY(:,2), 'r-','LineWidth', LWth);                % path
             plot(pathXY(1,1), pathXY(1,2), 'rs','MarkerFaceColor','r','HandleVisibility', 'off');        % start
             plot(pathXY(end,1), pathXY(end,2),'rd','MarkerFaceColor','r','HandleVisibility', 'off');     % finish
             
             % Add SL Path and HOV Position to 2D Plot
             if ~isempty(state_SL)
-                p_sl = plot(state_SL(:,1), state_SL(:,2), '--', 'Color', purple, 'LineWidth', 2);
+                p_sl = plot(state_SL(:,1), state_SL(:,2), '--', 'Color', purple, 'LineWidth', LWth);
             end
-            p_hov = plot(pU_opt_HOV(1), pU_opt_HOV(2), 'k*', 'MarkerSize', 12, 'LineWidth', 1.5);
+            p_hov = plot(pU_opt_HOV(1), pU_opt_HOV(2), 'k*', 'MarkerSize', MS_big, 'LineWidth', LW);
             
             if ~isempty(state_SL)
                 legend({'Rate samples','BS','Users','Reference path', 'SL Path', 'HOV Position'}, ...
@@ -77,7 +104,24 @@ switch settings.model
                 legend({'Rate samples','BS','Users','Reference path', 'HOV Position'}, ...
                        'Location','northoutside'); 
             end
+            cb = colorbar;
+            cb.Label.String = 'Total network rate (bit/s)';
+            cb.Label.FontSize = FSL;
+
+            
+
+            % Set physical figure size close to your intended print size (single column ≈ 3.5in wide)
+            set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
+            
+            % Bump up font sizes BEFORE export so they're readable at final print size
+            set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+            set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
+
+
             hold off;
+
+
         end
         
         %% ------------------------------------------
@@ -87,31 +131,31 @@ switch settings.model
         
         figure;
         plot3(state_NoT(:,1), state_NoT(:,2), state_NoT(:,3), ...
-              'b', 'LineWidth', 2, 'DisplayName', 'NoT Trajectory');
+              'b', 'LineWidth', LWth, 'DisplayName', 'NoT Trajectory');
         hold on
         plot3(state_HoT(:,1), state_HoT(:,2), state_HoT(:,3), ...
-              'g', 'LineWidth', 2, 'DisplayName', 'HoT Trajectory');
+              'g', 'LineWidth', LWth, 'DisplayName', 'HoT Trajectory');
               
         % if ~isempty(state_SL)
         %     plot3(state_SL(:,1), state_SL(:,2), state_SL(:,3), ...
-        %           '-', 'Color', purple, 'LineWidth', 2, 'DisplayName', 'SL Trajectory');
+        %           '-', 'Color', purple, 'LineWidth', LWth, 'DisplayName', 'SL Trajectory');
         % end
         
         % HOV Position (Black Star)
-       % scatter3(pU_opt_HOV(1), pU_opt_HOV(2), pU_opt_HOV(3), 150, 'kp', 'filled', 'DisplayName', 'HOV Position');
+       % scatter3(pU_opt_HOV(1), pU_opt_HOV(2), pU_opt_HOV(3), 210,'kp', 'filled', 'DisplayName', 'HOV Position');
         
         plot3(pUser_ref(:,1), pUser_ref(:,2), pUser_ref(:,3), ...
-              'r', 'LineWidth', 2, 'DisplayName', 'Reference Trajectory');
-        scatter3(pUser_ref(1,1), pUser_ref(1,2), pUser_ref(1,3), 100,'g^','filled','DisplayName','Start');
-        scatter3(pUser_ref(end,1), pUser_ref(end,2), pUser_ref(end,3),100,'b^','filled','DisplayName','Finish');
+              'r', 'LineWidth', LWth, 'DisplayName', 'Reference Trajectory');
+        scatter3(pUser_ref(1,1), pUser_ref(1,2), pUser_ref(1,3), 140,'g^','filled','DisplayName','Start');
+        scatter3(pUser_ref(end,1), pUser_ref(end,2), pUser_ref(end,3), 140,'b^','filled','DisplayName','Finish');
 
         % Users (first one gets legend, rest hidden)
         num_users = size(pK, 2);
         for kUser = 1:num_users
             if kUser == 1
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'DisplayName','Users');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 70,'ro','filled', 'DisplayName','Users');
             else
-                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 50, 'ro','filled', 'HandleVisibility','off');
+                scatter3(pK(1,kUser), pK(2,kUser), pK(3,kUser), 70,'ro','filled', 'HandleVisibility','off');
             end
         end
         
@@ -168,9 +212,16 @@ switch settings.model
         y_panel = panel_offset * ones(1, 4);  % offset along Y-axis
         z_panel = panel_z + [0, 0, panel_height, panel_height];
         
-        fill3(x_panel, y_panel, z_panel, [1 0.1 0.1], 'FaceAlpha', 1, 'EdgeColor', 'k', 'HandleVisibility', 'off');
+        fill3(x_panel, y_panel, z_panel, [1 0.1 0.1], 'FaceAlpha', 1,'EdgeColor', 'k', 'HandleVisibility', 'off');
         % ===== (Optional) Stylized BS tower/antenna (purely visual) =====
-        scatter3(0,0,12,150,'rs','filled','DisplayName','BS position');          % fixed BS at origin
+        scatter3(0,0,12, 210,'rs','filled','DisplayName','BS position');          % fixed BS at origin
+
+
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
        
         
         %% ------------------------------------------
@@ -200,28 +251,28 @@ switch settings.model
         
         % --- Plot ---
         figure;
-        tiledlayout(3,1,'TileSpacing','compact','Padding','compact');
+        tiledlayout(3, 1,'TileSpacing','compact','Padding','compact');
         
         % p_x
         nexttile;
-        plot(t_HoT, px_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_x');
+        plot(t_HoT, px_HoT, '-', 'Color', blue, 'LineWidth', LW, 'DisplayName', 'HoT: p_x');
         hold on;
-        plot(t_NoT, px_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_x');
+        plot(t_NoT, px_NoT, '--',  'Color', red, 'LineWidth', LW, 'DisplayName', 'NoT: p_x');
         grid on; ylabel('p_x (m)'); legend('show','Location','best');
         
         % p_y
         nexttile;
-        plot(t_HoT, py_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_y');
+        plot(t_HoT, py_HoT, '-', 'Color', blue, 'LineWidth', LW, 'DisplayName', 'HoT: p_y');
         hold on;
-        plot(t_NoT, py_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_y');
+        plot(t_NoT, py_NoT, '--',  'Color', red, 'LineWidth', LW, 'DisplayName', 'NoT: p_y');
         
         grid on; ylabel('p_y (m)'); legend('show','Location','best');
         
         % p_z
         nexttile;
-        plot(t_HoT, pz_HoT, '-', 'Color', blue, 'LineWidth', 1.5, 'DisplayName', 'HoT: p_z');
+        plot(t_HoT, pz_HoT, '-', 'Color', blue, 'LineWidth', LW, 'DisplayName', 'HoT: p_z');
         hold on;
-        plot(t_NoT, pz_NoT, '--',  'Color', red, 'LineWidth', 1.5, 'DisplayName', 'NoT: p_z');
+        plot(t_NoT, pz_NoT, '--',  'Color', red, 'LineWidth', LW, 'DisplayName', 'NoT: p_z');
         
         
         grid on; ylabel('p_z (m)'); xlabel('Time (s)'); legend('show','Location','best');
@@ -230,6 +281,10 @@ switch settings.model
         ax = findall(gcf,'Type','axes'); 
         linkaxes(ax,'x');
         xlim([min([t_NoT(:); t_HoT(:)]), max([t_NoT(:); t_HoT(:)])]);
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
         %% ------------------------------------------
         %  Communication metrics along all flights
@@ -371,14 +426,18 @@ switch settings.model
         figure(); hold on;
         for user = 1:kUsers
             plot(t_plot, RATES_HoT(:, user), ...
-                'LineWidth', 1.5, 'LineStyle', '-', 'DisplayName', ['Rate-HoT ', num2str(user)]);
+                'LineWidth', LW, 'LineStyle', '-', 'DisplayName', ['Rate-HoT ', num2str(user)]);
             plot(t_plot, RATES_NoT(:, user), ...
-                'LineWidth', 1.5, 'LineStyle', '-.',  'DisplayName', ['Rate-NoT ', num2str(user)]);
+                'LineWidth', LW, 'LineStyle', '-.',  'DisplayName', ['Rate-NoT ', num2str(user)]);
 
         end
-        yline(R_min, '--k', 'LineWidth', 2, 'DisplayName', 'R_{min}');
+        yline(R_min, '--k', 'LineWidth', LWth, 'DisplayName', 'R_{min}');
         xlabel('Time (s)'); ylabel('User data rate (bit/s)');
         legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
         %% ------------------------------------------
@@ -401,14 +460,14 @@ switch settings.model
         % =========================
         h1 = plot(t_plot, mean_HoT, ...
          'Color', blue, ...
-         'LineWidth', 2);
+         'LineWidth', LWth);
         
         % =========================
         % NoT
         % =========================
         h2 = plot(t_plot, mean_NoT, ...
          'Color', orange, ...
-         'LineWidth', 1.5);
+         'LineWidth', LW);
 
         % =========================
         % SL
@@ -418,7 +477,7 @@ switch settings.model
             mean_SL = mean(RATES_SL, 2);
             h_sl = plot(t_plot, mean_SL(:), ...
              'Color', purple, ...
-             'LineWidth', 1.5, ...
+             'LineWidth', LW, ...
              'LineStyle', '-');
         end
         
@@ -428,7 +487,7 @@ switch settings.model
         mean_HOV = mean(RATES_HOV, 2);
         h_hov = plot(t_plot, mean_HOV(:), ...
          'Color', teal, ...
-         'LineWidth', 1.5, ...
+         'LineWidth', LW, ...
          'LineStyle', '-');
 
         % =========================
@@ -436,15 +495,15 @@ switch settings.model
         % =========================
         h1_prime = plot(t_plot, mean_HoT, ...
          'Color', blue, ...
-         'LineWidth', 1.5);
+         'LineWidth', LW);
          
         % =========================
         % QoS line
         % =========================
-        h3 = yline(R_min,'--k','LineWidth',2);
+        h3 = yline(R_min,'--k','LineWidth', LWth);
         
-        xlabel('Time (s)','FontSize',12);
-        ylabel('Average user rate (bit/s)','FontSize',12);
+        xlabel('Time (s)','FontSize', FS);
+        ylabel('Average user rate (bit/s)','FontSize', FS);
         
         grid on;
         
@@ -462,6 +521,11 @@ switch settings.model
         leg_labels{end+1} = 'R_{min}';
         
         legend(leg_handles, leg_labels, 'Location','northoutside','NumColumns',3);
+
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
         hold off;
 
@@ -470,21 +534,25 @@ switch settings.model
         %  ------------------------------------------
         figure; hold on;
 
-        plot(t_plot, Total_HoT_BP, 'b-', 'LineWidth', 1.5, 'DisplayName', 'HoT-BP');
-        plot(t_plot, Total_NoT_BP, 'b--',  'LineWidth', 1.5, 'DisplayName', 'NoT-BP');
+        plot(t_plot, Total_HoT_BP, 'b-', 'LineWidth', LW, 'DisplayName', 'HoT-BP');
+        plot(t_plot, Total_NoT_BP, 'b--',  'LineWidth', LW, 'DisplayName', 'NoT-BP');
         
-        plot(t_plot, Total_HoT_P,  'r-', 'LineWidth', 1.5, 'DisplayName', 'HoT-P');
-        plot(t_plot, Total_NoT_P,  'r--',  'LineWidth', 1.5, 'DisplayName', 'NoT-P');
+        plot(t_plot, Total_HoT_P,  'r-', 'LineWidth', LW, 'DisplayName', 'HoT-P');
+        plot(t_plot, Total_NoT_P,  'r--',  'LineWidth', LW, 'DisplayName', 'NoT-P');
         
-        plot(t_plot, Total_SL_BP,  '-','color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL');
+        plot(t_plot, Total_SL_BP,  '-','color', purple, 'LineWidth', LW, 'DisplayName', 'SL');
 
-        plot(t_plot, Total_HoT_B,  '-','color', "#FF8800", 'LineWidth', 1.5, 'DisplayName', 'HoT-B');
-        plot(t_plot, Total_NoT_B,  '--','color', "#FF8800",  'LineWidth', 1.5, 'DisplayName', 'NoT-B');
+        plot(t_plot, Total_HoT_B,  '-','color', "#FF8800", 'LineWidth', LW, 'DisplayName', 'HoT-B');
+        plot(t_plot, Total_NoT_B,  '--','color', "#FF8800",  'LineWidth', LW, 'DisplayName', 'NoT-B');
 
         
         
         xlabel('Time (s)'); ylabel('Total network rate (bit/s)');
         legend('show','Location','best'); grid on;
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
         %% ------------------------------------------
         %  Figure 6: Per-user transmitted data (cum.)
@@ -495,14 +563,21 @@ switch settings.model
         figure; hold on;
         for user = 1:kUsers
             plot(t_plot, TD_HoT(:, user), ...
-                'LineWidth',1.5, 'LineStyle','-', 'DisplayName',['Data-HoT ',num2str(user)]);
+                'LineWidth', LW, 'LineStyle','-', 'DisplayName',['Data-HoT ',num2str(user)]);
             plot(t_plot, TD_NoT(:, user), ...
-                'LineWidth',1.25, 'LineStyle','--',  'DisplayName',['Data-NoT ',num2str(user)]);
+                'LineWidth', LW, 'LineStyle','--',  'DisplayName',['Data-NoT ',num2str(user)]);
 
         end
-        yline(R_min * Tf, '--k', 'LineWidth', 2, 'DisplayName', 'R_{min}\cdot T_f');
+        yline(R_min * Tf, '--k', 'LineWidth', LWth, 'DisplayName', 'R_{min}\cdot T_f');
         xlabel('Time (s)'); ylabel('Transmitted data (bit)');
-        legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; hold off;
+        legend('show', 'Location', 'northoutside', 'NumColumns', 3); grid on; 
+        
+        
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        
+        hold off;
 
         %% Compute statistics across users
         %% ------------------------------------------
@@ -512,112 +587,82 @@ switch settings.model
         % Compute cumulative transmitted data
         TD_NoT = cumsum(RATES_NoT) * Ts;
         TD_HoT = cumsum(RATES_HoT) * Ts;
-        TD_SL = cumsum(RATES_SL) * Ts;
-
-        %% Statistics across users
+        TD_SL  = cumsum(RATES_SL)  * Ts;
         
-        mean_HoT = mean(TD_HoT,2);
-        std_HoT  = std(TD_HoT,0,2);
-        
-        mean_NoT = mean(TD_NoT,2);
-        std_NoT  = std(TD_NoT,0,2);
-
-        mean_SL = mean(TD_SL,2);
-        std_SL  = std(TD_SL,0,2);
-        
-        % Plot
+        % Statistics across users
+        mean_HoT = mean(TD_HoT,2);  std_HoT = std(TD_HoT,0,2);
+        mean_NoT = mean(TD_NoT,2);  std_NoT = std(TD_NoT,0,2);
+        mean_SL  = mean(TD_SL,2);   std_SL  = std(TD_SL,0,2);
         
         figure;
         hold on;
         box on;
         
         % =========================
-        % HoT variance
+        % Shaded std bands (draw least important first, most important last)
         % =========================
-        hShadeHoT = fill(...
-            [t_plot; flipud(t_plot)], ...
-            [mean_HoT-std_HoT; flipud(mean_HoT+std_HoT)], ...
-            blue,...
-            'FaceAlpha',0.20,...
-            'EdgeColor','none');
-        
-        % =========================
-        % NoT variance
-        % =========================
-        hShadeNoT = fill(...
-            [t_plot; flipud(t_plot)], ...
-            [mean_NoT-std_NoT; flipud(mean_NoT+std_NoT)], ...
-            red,...
-            'FaceAlpha',0.20,...
-            'EdgeColor','none');
-
-        % =========================
-        % SL variance
-        % =========================
-        hShadeSL = fill(...
-            [t_plot; flipud(t_plot)], ...
+        hShadeSL = fill([t_plot; flipud(t_plot)], ...
             [mean_SL-std_SL; flipud(mean_SL+std_SL)], ...
-            purple,...
-            'FaceAlpha',0.20,...
-            'EdgeColor','none');
+            purple, 'FaceAlpha', 0.12, 'EdgeColor', 'none');
+        
+        hShadeNoT = fill([t_plot; flipud(t_plot)], ...
+            [mean_NoT-std_NoT; flipud(mean_NoT+std_NoT)], ...
+            red, 'FaceAlpha', 0.15, 'EdgeColor', 'none');
+        
+        hShadeHoT = fill([t_plot; flipud(t_plot)], ...
+            [mean_HoT-std_HoT; flipud(mean_HoT+std_HoT)], ...
+            blue, 'FaceAlpha', 0.22, 'EdgeColor', 'none');
         
         % =========================
-        % Mean curves
+        % Mean curves — distinct linestyle + linewidth per condition
         % =========================
-        hMeanHoT = plot(...
-            t_plot,...
-            mean_HoT,...
-            'Color',blue,...
-            'LineWidth',2);
-        
-        hMeanNoT = plot(...
-            t_plot,...
-            mean_NoT,...
-            'Color',red,...
-            'LineWidth',1.5);
-         
-        hMeanSL = plot(...
-            t_plot,...
-            mean_SL,...
-            'Color',purple,...
-            'LineWidth',1.5);
-        
-        % Replot HoT so it stays on top
-        plot(...
-            t_plot,...
-            mean_HoT,...
-            'Color',blue,...
-            'LineWidth',2,...
-            'HandleVisibility','off');
+        hMeanSL  = plot(t_plot, mean_SL,  'Color', purple, 'LineWidth', LW, 'LineStyle', ':');
+        hMeanNoT = plot(t_plot, mean_NoT, 'Color', red,    'LineWidth', LW, 'LineStyle', '--');
+        hMeanHoT = plot(t_plot, mean_HoT, 'Color', blue,   'LineWidth', LWth, 'LineStyle', '-');
         
         % =========================
-        % QoS Threshold
+        % Sparse markers to reinforce line identity
         % =========================
-        hThr = yline(...
-            R_min*Tf,...
-            '--k',...
-            'LineWidth',2);
+        markStep = max(1, round(length(t_plot)/15));   % ~15 markers across the curve
+        markIdx  = 1:markStep:length(t_plot);
         
-        xlabel('Time (s)','FontSize',12);
-        ylabel('Average transmitted data (bit)','FontSize',12);
+        plot(t_plot(markIdx), mean_SL(markIdx),  's', 'Color', purple, ...
+             'MarkerFaceColor', purple, 'MarkerSize', MS, 'HandleVisibility','off');
+        plot(t_plot(markIdx), mean_NoT(markIdx), '^', 'Color', red, ...
+             'MarkerFaceColor', red, 'MarkerSize', MS, 'HandleVisibility','off');
+        plot(t_plot(markIdx), mean_HoT(markIdx), 'o', 'Color', blue, ...
+             'MarkerFaceColor', blue, 'MarkerSize', MS, 'HandleVisibility','off');
         
+        % =========================
+        % QoS threshold
+        % =========================
+        hThr = yline(R_min*Tf, '--k', 'LineWidth', LWth);
+        
+        % =========================
+        % Labels & formatting
+        % =========================
+        xlabel('Time (s)', 'FontSize', FS);
+        ylabel('Average transmitted data (bit)', 'FontSize', FS);
         grid on;
-        set(gca,'FontSize',12);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        ytickformat('%.1f');
         
+        % =========================
         % Legend
-        legend(...
-            [hShadeHoT, hShadeNoT, hShadeSL, ...
-             hMeanHoT, hMeanNoT, hMeanSL, hThr], ...
-            {'HoT \pm1 std', ...
-             'NoT \pm1 std', ...
-             'SL \pm1 std', ...
-             'Mean HoT', ...
-             'Mean NoT', ...
-             'Mean SL', ...
-             'R_{min}T_f'}, ...
-            'Location','northoutside', ...
-            'NumColumns',3);
-            
+        % =========================
+        legend([hMeanHoT, hMeanNoT, hMeanSL, ...
+                hShadeHoT, hShadeNoT, hShadeSL, hThr], ...
+               {'Mean HoT', 'Mean NoT', 'Mean SL', ...
+                'HoT \pm1 std', 'NoT \pm1 std', 'SL \pm1 std', ...
+                'R_{min}T_f'}, ...
+               'Location', 'northoutside', 'NumColumns', 6,'FontSize', FS);
+        
+        % =========================
+        % Figure size for LaTeX export
+        % =========================
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        
         hold off;
         
         %% ------------------------------------------
@@ -632,28 +677,32 @@ switch settings.model
         
         figure; hold on;
         Trans_HOV_BP = cumsum(Total_HOV_BP) * Ts;
-        plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', 1.5, 'DisplayName', 'HOV-BP');
+        plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', LW, 'DisplayName', 'HOV-BP');
 
-        plot(t_plot, Trans_HoT_BP, 'b-', 'LineWidth',1.5, 'DisplayName','HoT-BP');
-        plot(t_plot, Trans_NoT_BP, 'b--',  'LineWidth',1.5, 'DisplayName','NoT-BP');
+        plot(t_plot, Trans_HoT_BP, 'b-', 'LineWidth', LW, 'DisplayName','HoT-BP');
+        plot(t_plot, Trans_NoT_BP, 'b--',  'LineWidth', LW, 'DisplayName','NoT-BP');
         
 
 
         
-        plot(t_plot, Trans_HoT_P,  'r-', 'LineWidth',1.5, 'DisplayName','HoT-P');
-        plot(t_plot, Trans_NoT_P,  'r--',  'LineWidth',1.5, 'DisplayName','NoT-P');
+        plot(t_plot, Trans_HoT_P,  'r-', 'LineWidth', LW, 'DisplayName','HoT-P');
+        plot(t_plot, Trans_NoT_P,  'r--',  'LineWidth', LW, 'DisplayName','NoT-P');
 
         if exist('Total_SL_BP','var') && ~isempty(Total_SL_BP)
             Trans_SL_BP = cumsum(Total_SL_BP) * Ts;
-            plot(t_plot, Trans_SL_BP, '-', 'Color', purple, 'LineWidth', 1.5, 'DisplayName', 'SL-BP');
+            plot(t_plot, Trans_SL_BP, '-', 'Color', purple, 'LineWidth', LW, 'DisplayName', 'SL-BP');
         end
         
         
-        plot(t_plot, Trans_HoT_B,  '-' ,'color', "#FF8800",'LineWidth',1.5, 'DisplayName','HoT-B');
-        plot(t_plot, Trans_NoT_B,  '--', 'color', "#FF8800", 'LineWidth',1.5, 'DisplayName','NoT-B');
+        plot(t_plot, Trans_HoT_B,  '-' ,'color', "#FF8800",'LineWidth', LW, 'DisplayName','HoT-B');
+        plot(t_plot, Trans_NoT_B,  '--', 'color', "#FF8800", 'LineWidth', LW, 'DisplayName','NoT-B');
         
         xlabel('Time (s)'); ylabel('Cumulative transmitted data (bit)');
         legend('show','Location','best'); grid on;
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
         %% ------------------------------------------
         %  Figure 8: Velocity (HoT run)
@@ -670,24 +719,35 @@ switch settings.model
         v_mag = sqrt(vx.^2 + vy.^2 + vz.^2);
         
         figure; hold on;
-        plot(time_HoT, v_mag, 'LineWidth', 1.5 );
-        yline(v_max, '--r', 'LineWidth', 1.5);
+        plot(time_HoT, v_mag, 'LineWidth', LW );
+        yline(v_max, '--r', 'LineWidth', LW);
         xlabel('Time (s)'); ylabel('Velocity (m/s)');
         ylim([v_min, v_max + 3]); grid on; hold off;
 
         lgd = legend('v (HoT)','$\bar{v}$','Interpreter','latex');
-        lgd.FontSize = 13;   
+        lgd.FontSize = FSL;   
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
         %% ------------------------------------------
         %  Figure 9: Angular velocities (HoT run)
         %  ------------------------------------------
         omega_HoT = state_HoT(:,11:13);
         figure; hold on;
-        plot(time_HoT, omega_HoT(:,1), 'LineWidth', 1.5, 'DisplayName', '\omega_x (HoT)');
-        plot(time_HoT, omega_HoT(:,2), 'LineWidth', 1.5, 'DisplayName', '\omega_y (HoT)');
-        plot(time_HoT, omega_HoT(:,3), 'LineWidth', 1.5, 'DisplayName', '\omega_z (HoT)');
+        plot(time_HoT, omega_HoT(:,1), 'LineWidth', LW, 'DisplayName', '\omega_x (HoT)');
+        plot(time_HoT, omega_HoT(:,2), 'LineWidth', LW, 'DisplayName', '\omega_y (HoT)');
+        plot(time_HoT, omega_HoT(:,3), 'LineWidth', LW, 'DisplayName', '\omega_z (HoT)');
         xlabel('Time (s)'); ylabel('Angular velocity (rad/s)');
-        legend('show'); grid on; hold off;
+        legend('show'); grid on; 
+        
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        
+        
+        hold off;
         
         %% ------------------------------------------
         %  Figure 10: Rotor speeds (HoT run)
@@ -699,24 +759,28 @@ switch settings.model
         figure;
         i=1;
         subplot(4,1,i);
-        plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', 1.25,'HandleVisibility','off');
-        yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5);
-        yline(sqrt(Omega_max), '--r', 'LineWidth', 1.5);
+        plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW,'HandleVisibility','off');
+        yline(sqrt(Omega_min), '--k', 'LineWidth', LW);
+        yline(sqrt(Omega_max), '--r', 'LineWidth', LW);
         ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
         ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
         lgd = legend('$\underline{\Omega}$','$\bar{\Omega}$','Interpreter','latex','Orientation','horizontal');
-        lgd.FontSize = 13; 
+        lgd.FontSize = FSL; 
         
 
         for i = 2:4
             subplot(4,1,i);
-            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', 1.25,'HandleVisibility','off');
-            yline(sqrt(Omega_min), '--k', 'LineWidth', 1.5,'HandleVisibility','off');
-            yline(sqrt(Omega_max), '--r', 'LineWidth', 1.5,'HandleVisibility','off');
+            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW,'HandleVisibility','off');
+            yline(sqrt(Omega_min), '--k', 'LineWidth', LW,'HandleVisibility','off');
+            yline(sqrt(Omega_max), '--r', 'LineWidth', LW,'HandleVisibility','off');
             ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
             ylabel(['\Omega_', num2str(i),'HoT (Hz)']); grid on;
         end
         xlabel('Time (s)');
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
 
         %% ------------------------------------------
@@ -737,11 +801,17 @@ switch settings.model
         yaw   = eul_HoT(:,3) * 180/pi;
         
         figure; hold on;
-        plot(time_HoT, roll,  'LineWidth', 1.5, 'DisplayName', 'Roll (HoT)');
-        plot(time_HoT, pitch, 'LineWidth', 1.5, 'DisplayName', 'Pitch (HoT)');
-        plot(time_HoT, yaw,   'LineWidth', 1.5, 'DisplayName', 'Yaw (HoT)');
+        plot(time_HoT, roll,  'LineWidth', LW, 'DisplayName', 'Roll (HoT)');
+        plot(time_HoT, pitch, 'LineWidth', LW, 'DisplayName', 'Pitch (HoT)');
+        plot(time_HoT, yaw,   'LineWidth', LW, 'DisplayName', 'Yaw (HoT)');
         xlabel('Time (s)'); ylabel('Euler angles (deg)');
-        legend('show'); grid on; hold off;
+        legend('show'); grid on; 
+        
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        
+        hold off;
 
         %% ------------------------------------------
         %  Figure 12: Position tracking error(HoT run)
@@ -813,37 +883,41 @@ switch settings.model
         %          PLOTS (HoT solid — NoT dashed)
         % ============================================================
         figure;
-        tiledlayout(4,1,'Padding','compact','TileSpacing','compact');
+        tiledlayout(4, 1,'Padding','compact','TileSpacing','compact');
         
         % --- Position Tracking Error Norm ---
         nexttile;
-        plot(time_HoT, err_p_HoT_norm, 'b', 'LineWidth', 1.5, 'DisplayName', 'HoT');
+        plot(time_HoT, err_p_HoT_norm, 'b', 'LineWidth', LW, 'DisplayName', 'HoT');
         hold on;
-        plot(time_NoT, err_p_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
-        grid on; ylabel('‖p - p_d‖ (m)');
+        plot(time_NoT, err_p_NoT_norm, 'r-.', 'LineWidth', LW, 'DisplayName', 'NoT');
+        grid on; ylabel('$$\|p - p_d\|$$ (m)','Interpreter','latex');
         legend('show');
         
         % --- Velocity Tracking Error Norm ---
         nexttile;
-        plot(time_HoT, err_v_HoT_norm, 'b', 'LineWidth', 1.5, 'DisplayName', 'HoT');
+        plot(time_HoT, err_v_HoT_norm, 'b', 'LineWidth', LW, 'DisplayName', 'HoT');
         hold on;
-        plot(time_NoT, err_v_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
-        grid on; ylabel('‖v - v_d‖ (m/s)');
+        plot(time_NoT, err_v_NoT_norm, 'r-.', 'LineWidth', LW, 'DisplayName', 'NoT');
+        grid on; ylabel('$$\|v- v_d\|$$ (m/s)','Interpreter','latex');
         
         % --- Angular Velocity Tracking Error Norm ---
         nexttile;
-        plot(time_HoT, err_w_HoT_norm, 'b', 'LineWidth', 1.5, 'DisplayName', 'HoT');
+        plot(time_HoT, err_w_HoT_norm, 'b', 'LineWidth', LW, 'DisplayName', 'HoT');
         hold on;
-        plot(time_NoT, err_w_NoT_norm, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
-        grid on; ylabel('‖\omega - \omega_d‖ (rad/s)');
+        plot(time_NoT, err_w_NoT_norm, 'r-.', 'LineWidth', LW, 'DisplayName', 'NoT');
+        grid on; ylabel('$$\|\omega - \omega_d\|$$ (rad/s)','Interpreter','latex');
         
         % --- Orientation Geodesic Error ---
         nexttile;
-        plot(time_HoT, err_q_HoT, 'b', 'LineWidth', 1.5, 'DisplayName', 'HoT');
+        plot(time_HoT, err_q_HoT, 'b', 'LineWidth', LW, 'DisplayName', 'HoT');
         hold on;
-        plot(time_NoT, err_q_NoT, 'r-.', 'LineWidth', 1.5, 'DisplayName', 'NoT');
+        plot(time_NoT, err_q_NoT, 'r-.', 'LineWidth', LW, 'DisplayName', 'NoT');
         grid on; ylabel('$$\|\log(q \circ q_d^\star)\|$$','Interpreter','latex');
         xlabel('Time (s)');
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
         %% ============================================================
         %      OBJECTIVE DECOMPOSITION — HoT
@@ -889,46 +963,46 @@ switch settings.model
         % ============================================================
         
         figure;
-        tiledlayout(6,1,'Padding','compact','TileSpacing','compact');
+        tiledlayout(6, 1,'Padding','compact','TileSpacing','compact');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_p, 'b','LineWidth',1.5);
+        plot(time_HoT, J_p, 'b','LineWidth', LW);
         grid on;
         ylabel('J_p');
         title('Position Contribution');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_v, 'Color',[0.85 0.33 0.1],'LineWidth',1.5);
+        plot(time_HoT, J_v, 'Color',[0.85 0.33 0.1],'LineWidth', LW);
         grid on;
         ylabel('J_v');
         title('Velocity Contribution');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_sv, 'm','LineWidth',1.5);
+        plot(time_HoT, J_sv, 'm','LineWidth', LW);
         grid on;
         ylabel('J_{sv}');
         title('Slack (QoS) Contribution');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_omega, 'g','LineWidth',1.5);
+        plot(time_HoT, J_omega, 'g','LineWidth', LW);
         grid on;
         ylabel('J_\omega');
         title('Angular Velocity Contribution');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_eta, 'k','LineWidth',1.5);
+        plot(time_HoT, J_eta, 'k','LineWidth', LW);
         grid on;
         ylabel('J_\eta');
         title('Orientation (Geodesic) Contribution');
         
         % ------------------------------------------------------------
         nexttile;
-        plot(time_HoT, J_total, 'LineWidth',2);
+        plot(time_HoT, J_total, 'LineWidth', LWth);
         grid on;
         ylabel('J_{total}');
         xlabel('Time (s)');
@@ -937,6 +1011,10 @@ switch settings.model
         % Link all x-axes
         ax = findall(gcf,'Type','axes');
         linkaxes(ax,'x');
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
         %% ============================================================
@@ -992,6 +1070,10 @@ switch settings.model
         cb.Ticks = [0.25 0.75];
         cb.TickLabels = {'Violation','Satisfied'};
 
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
         % Plot 2: Slack variables
 
         figure;
@@ -999,7 +1081,7 @@ switch settings.model
         
         for i = 1:K_User
             plot(time_HoT,slack_HoT(:,i), ...
-                 'LineWidth',1.5, ...
+                 'LineWidth', LW, ...
                  'DisplayName',['User ',num2str(i)]);
         end
         
@@ -1008,6 +1090,10 @@ switch settings.model
         
         legend show;
         grid on;
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
         %% ------------------------------------------
         %  Plot: Average Slack Variable over Time
@@ -1032,7 +1118,7 @@ switch settings.model
         % =========================
         h_slack_hot = plot(time_HoT, mean_slack_HoT, ...
              'Color', blue, ...
-             'LineWidth', 2, ...
+             'LineWidth', LWth, ...
              'LineStyle', '-');
              
         % =========================
@@ -1040,7 +1126,7 @@ switch settings.model
         % =========================
         h_slack_not = plot(time_NoT, mean_slack_NoT, ...
              'Color', orange, ...
-             'LineWidth', 1.5, ...
+             'LineWidth', LW, ...
              'LineStyle', '--');
 
         % =========================
@@ -1048,17 +1134,17 @@ switch settings.model
         % =========================
         h_slack_sl = plot(time_SL, mean_slack_SL, ...
              'Color', green, ...
-             'LineWidth', 1.5, ...
+             'LineWidth', LW, ...
              'LineStyle', '-.');
              
         % % Re-plot HoT on top to ensure it is clearly visible
         % plot(time_HoT, mean_slack_HoT, ...
         %      'Color', blue, ...
-        %      'LineWidth', 1.5, ...
+        %      'LineWidth', LW, ...
         %      'LineStyle', '-');
         % 
-        xlabel('Time (s)', 'FontSize', 12);
-        ylabel('Average Slack Variable', 'FontSize', 12);
+        xlabel('Time (s)', 'FontSize', FS);
+        ylabel('Average Slack Variable', 'FontSize', FS);
         
         grid on;
         
@@ -1066,6 +1152,11 @@ switch settings.model
         legend([h_slack_hot, h_slack_not, h_slack_sl], ...
                {'HoT (Average Slack)', 'NoT (Average Slack)','SL (Average Slack)'}, ...
                'Location', 'northoutside', 'NumColumns', 2);
+
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
                
         hold off;
 
@@ -1078,7 +1169,7 @@ switch settings.model
         for i = 1:K_User
             plot(t_plot, ...
                  violation_depth(:,i), ...
-                 'LineWidth',1.5, ...
+                 'LineWidth', LW, ...
                  'DisplayName',['User ',num2str(i)]);
         end
         
@@ -1087,46 +1178,57 @@ switch settings.model
         
         legend show;
         grid on;
+
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
-
-        % %% HoT:Histogram of NMPC solve times (Complexity Figure) 
+        
+        %% HoT: Histogram of NMPC solve times (Complexity Figure)
         figure;
-
-        histogram(solve_time_HoT,...
-                  'Normalization','percentage',...
+        hHistHoT = histogram(solve_time_HoT, ...
+                  'Normalization','percentage', ...
                   'NumBins',50);
         
         hold on;
         
-        xline(Ts,...
-              'r',...
-              'LineWidth',2);
+        hTsHoT = xline(Ts, 'r', 'LineWidth', LWth);
         
-        xlabel('Time [s]');
-        ylabel('% control steps of HoT');
+        xlabel('Time [s]', 'Interpreter','latex', 'FontSize', FS);
+        ylabel('\% control steps of HoT', 'Interpreter','latex', 'FontSize', FS);
+        
+        legend([hHistHoT, hTsHoT], ...
+               {'Solve time distribution', '$T_s$ (sampling time)'}, ...
+               'Interpreter','latex', 'Location','northeast', 'FontSize', FS);
         
         grid on;
         box on;
-
-        % %% NoT:Histogram of NMPC solve times (Complexity Figure) 
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        
+        %% NoT: Histogram of NMPC solve times (Complexity Figure)
         figure;
-
-        histogram(solve_time_NoT,...
-                  'Normalization','percentage',...
+        hHistNoT = histogram(solve_time_NoT, ...
+                  'Normalization','percentage', ...
                   'NumBins',50);
         
         hold on;
         
-        xline(Ts,...
-              'r',...
-              'LineWidth',2);
+        hTsNoT = xline(Ts, 'r', 'LineWidth', LWth);
         
-        xlabel('Time [s]');
-        ylabel('% control steps of NoT');
+        xlabel('Time [s]', 'Interpreter','latex', 'FontSize', FS);
+        ylabel('\% control steps of NoT', 'Interpreter','latex', 'FontSize', FS);
+        
+        legend([hHistNoT, hTsNoT], ...
+               {'Solve time distribution', '$T_s$ (sampling time)'}, ...
+               'Interpreter','latex', 'Location','northeast', 'FontSize', FS);
         
         grid on;
         box on;
-
+        set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
 
 end
