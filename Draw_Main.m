@@ -743,7 +743,7 @@ switch settings.model
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         
         %% ------------------------------------------
-        %  Figure 9: Angular velocities (HoT run)
+        %  Figure 9-a: Angular velocities (HoT run)
         %  ------------------------------------------
         omega_HoT = state_HoT(:,11:13);
         figure; hold on;
@@ -759,6 +759,95 @@ switch settings.model
         
         
         hold off;
+
+        %% ------------------------------------------
+        %  Figure 9-b: Angular velocities (HoT run)
+        %  with zoomed steady-state inset
+        %% ------------------------------------------
+        
+        omega_HoT = state_HoT(:,11:13);
+        
+        figure;
+        
+        %% ==========================
+        % Main axes
+        %% ==========================
+        ax1 = axes;
+        hold(ax1,'on');
+        box(ax1,'on');
+        
+        plot(ax1,time_HoT,omega_HoT(:,1),...
+            'LineWidth',LW,...
+            'DisplayName','\omega_x (HoT)');
+        
+        plot(ax1,time_HoT,omega_HoT(:,2),...
+            'LineWidth',LW,...
+            'DisplayName','\omega_y (HoT)');
+        
+        plot(ax1,time_HoT,omega_HoT(:,3),...
+            'LineWidth',LW,...
+            'DisplayName','\omega_z (HoT)');
+        
+        xlabel('Time (s)');
+        ylabel('Angular velocity (rad/s)');
+        
+        grid(ax1,'on');
+        
+        legend(ax1,'show','Location','southwest');
+        
+        set(ax1,...
+            'FontSize',FS,...
+            'LineWidth',AXLW);
+        
+        %% ==========================
+        % Zoom region
+        %% ==========================
+        
+        xZoom = [0.1 10.1];
+        yZoom = [-0.9 1.9];
+        
+        rectangle(ax1,...
+            'Position',[xZoom(1),yZoom(1),...
+                        diff(xZoom),diff(yZoom)],...
+            'EdgeColor','k',...
+            'LineStyle','--',...
+            'LineWidth',1);
+        
+        %% ==========================
+        % Inset
+        %% ==========================
+        
+        ax2 = axes(...
+            'Position',[0.60 0.27 0.30 0.28],...
+            'Box','on');
+        
+        hold(ax2,'on');
+        
+        plot(ax2,time_HoT,omega_HoT(:,1),...
+            'LineWidth',LW);
+        
+        plot(ax2,time_HoT,omega_HoT(:,2),...
+            'LineWidth',LW);
+        
+        plot(ax2,time_HoT,omega_HoT(:,3),...
+            'LineWidth',LW);
+        
+        grid(ax2,'on');
+        
+        xlim(ax2,xZoom);
+        ylim(ax2,yZoom);
+        
+        set(ax2,...
+            'FontSize',8,...
+            'LineWidth',0.75,...
+            'XTick',[0.1 2.1 4.1 6.1 8.1 10.1],...
+            'YTick',[-0.5 0 0.5 1 1.5 1.9]);
+        
+        % Keep inset visible
+        uistack(ax2,'top');
+        
+        %% Apply formatting
+        set(findall(gcf,'-property','FontSize'),'FontSize',FS);
         
         %% ------------------------------------------
         %  Figure 10: Rotor speeds (HoT run)
@@ -770,7 +859,7 @@ switch settings.model
         figure;
         i=1;
         subplot(4,1,i);
-        plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW,'HandleVisibility','off');
+        plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW/2,'HandleVisibility','off');
         yline(sqrt(Omega_min), '--k', 'LineWidth', LW);
         yline(sqrt(Omega_max), '--r', 'LineWidth', LW);
         ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
@@ -781,7 +870,7 @@ switch settings.model
 
         for i = 2:4
             subplot(4,1,i);
-            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW,'HandleVisibility','off');
+            plot(time_HoT, sqrt(Omega_HoT(:,i)), 'LineWidth', LW/2,'HandleVisibility','off');
             yline(sqrt(Omega_min), '--k', 'LineWidth', LW,'HandleVisibility','off');
             yline(sqrt(Omega_max), '--r', 'LineWidth', LW,'HandleVisibility','off');
             ylim([sqrt(Omega_min) - 10, sqrt(Omega_max) + 10]);
@@ -1205,7 +1294,7 @@ switch settings.model
         
         hTsHoT = xline(Ts, 'r', 'LineWidth', LWth);
         
-        xlabel('Time [s]', 'Interpreter','latex', 'FontSize', FS);
+        xlabel('Time (s)', 'Interpreter','latex', 'FontSize', FS);
         ylabel('\% control steps of HoT', 'Interpreter','latex', 'FontSize', FS);
         
         legend([hHistHoT, hTsHoT], ...
@@ -1228,7 +1317,7 @@ switch settings.model
         
         hTsNoT = xline(Ts, 'r', 'LineWidth', LWth);
         
-        xlabel('Time [s]', 'Interpreter','latex', 'FontSize', FS);
+        xlabel('Time (s)', 'Interpreter','latex', 'FontSize', FS);
         ylabel('\% control steps of NoT', 'Interpreter','latex', 'FontSize', FS);
         
         legend([hHistNoT, hTsNoT], ...
