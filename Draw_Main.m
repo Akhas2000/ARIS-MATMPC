@@ -110,11 +110,16 @@ switch settings.model
             
             if ~isempty(state_SL)
                 legend({'Rate samples','BS','Users','Reference path', 'SL Path', 'HOV Position'}, ...
-                       'Location','northoutside', 'NumColumns', 3); 
+                       'Location','northoutside'); 
             else
                 legend({'Rate samples','BS','Users','Reference path', 'HOV Position'}, ...
                        'Location','northoutside'); 
             end
+            % --- Match reference PDF axis limits ---
+            lim_xmin = xmin; lim_xmax = xmax;
+            lim_ymin = ymin; lim_ymax = ymax;
+            xlim([lim_xmin lim_xmax]);
+            ylim([lim_ymin lim_ymax]);
             cb = colorbar;
             cb.Label.String = 'Total network rate (bit/s)';
             cb.Label.FontSize = FSL;
@@ -803,8 +808,8 @@ switch settings.model
         % Zoom region
         %% ==========================
         
-        xZoom = [0.1 10.1];
-        yZoom = [-0.9 1.9];
+        xZoom = [0 4];
+        yZoom = [-11 2];
         
         rectangle(ax1,...
             'Position',[xZoom(1),yZoom(1),...
@@ -840,8 +845,8 @@ switch settings.model
         set(ax2,...
             'FontSize',8,...
             'LineWidth',0.75,...
-            'XTick',[0.1 2.1 4.1 6.1 8.1 10.1],...
-            'YTick',[-0.5 0 0.5 1 1.5 1.9]);
+            'XTick',[0  1 2 3 4 ],...
+            'YTick',[-11 -5  -1  1.9]);
         
         % Keep inset visible
         uistack(ax2,'top');
@@ -1195,69 +1200,107 @@ switch settings.model
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
 
+        % %% ------------------------------------------
+        % %  Plot: Average Slack Variable over Time
+        % %  ------------------------------------------
+        % 
+        % % Extract slack variables from the control matrices
+        % slack_HoT_all = controls_HoT(:, 5:4+K_User);
+        % slack_NoT_all = controls_NoT(:, 5:4+K_User);
+        % slack_SL_all = controls_SL(:, 5:4+K_User);
+        % 
+        % % Compute average across all users at each time step
+        % mean_slack_HoT = mean(slack_HoT_all, 2);
+        % mean_slack_NoT = mean(slack_NoT_all, 2);
+        % mean_slack_SL = mean(slack_SL_all, 2);
+        % 
+        % figure; 
+        % hold on; 
+        % box on;
+        % 
+        % % =========================
+        % % HoT Average Slack
+        % % =========================
+        % h_slack_hot = plot(time_HoT, mean_slack_HoT, ...
+        %      'Color', blue, ...
+        %      'LineWidth', LWth, ...
+        %      'LineStyle', '-');
+        % 
+        % % =========================
+        % % NoT Average Slack
+        % % =========================
+        % h_slack_not = plot(time_NoT, mean_slack_NoT, ...
+        %      'Color', orange, ...
+        %      'LineWidth', LW, ...
+        %      'LineStyle', '--');
+        % 
+        % % =========================
+        % % SL Average Slack
+        % % =========================
+        % h_slack_sl = plot(time_SL, mean_slack_SL, ...
+        %      'Color', green, ...
+        %      'LineWidth', LW, ...
+        %      'LineStyle', '-.');
+        % 
+        % % % Re-plot HoT on top to ensure it is clearly visible
+        % % plot(time_HoT, mean_slack_HoT, ...
+        % %      'Color', blue, ...
+        % %      'LineWidth', LW, ...
+        % %      'LineStyle', '-');
+        % % 
+        % xlabel('Time (s)', 'FontSize', FS);
+        % ylabel('Average Slack Variable', 'FontSize', FS);
+        % 
+        % grid on;
+        % 
+        % % Add Legend
+        % legend([h_slack_hot, h_slack_not, h_slack_sl], ...
+        %        {'HoT (Average Slack)', 'NoT (Average Slack)','SL (Average Slack)'}, ...
+        %        'Location', 'northoutside', 'NumColumns', 2);
+        % 
+        % 
+        % %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        % set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+        % set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+        % 
+        % hold off;
+
+
+
         %% ------------------------------------------
-        %  Plot: Average Slack Variable over Time
+        %  Plot: Normalized Average HoT Slack Variable
         %  ------------------------------------------
         
-        % Extract slack variables from the control matrices
+        % Extract HoT slack variables
         slack_HoT_all = controls_HoT(:, 5:4+K_User);
-        slack_NoT_all = controls_NoT(:, 5:4+K_User);
-        slack_SL_all = controls_SL(:, 5:4+K_User);
         
         % Compute average across all users at each time step
         mean_slack_HoT = mean(slack_HoT_all, 2);
-        mean_slack_NoT = mean(slack_NoT_all, 2);
-        mean_slack_SL = mean(slack_SL_all, 2);
         
-        figure; 
-        hold on; 
+        % Normalize by the maximum average HoT value
+        mean_slack_HoT_norm = mean_slack_HoT / max(mean_slack_HoT);
+        
+        figure;
+        hold on;
         box on;
         
-        % =========================
-        % HoT Average Slack
-        % =========================
-        h_slack_hot = plot(time_HoT, mean_slack_HoT, ...
-             'Color', blue, ...
-             'LineWidth', LWth, ...
-             'LineStyle', '-');
-             
-        % =========================
-        % NoT Average Slack
-        % =========================
-        h_slack_not = plot(time_NoT, mean_slack_NoT, ...
-             'Color', orange, ...
-             'LineWidth', LW, ...
-             'LineStyle', '--');
-
-        % =========================
-        % SL Average Slack
-        % =========================
-        h_slack_sl = plot(time_SL, mean_slack_SL, ...
-             'Color', green, ...
-             'LineWidth', LW, ...
-             'LineStyle', '-.');
-             
-        % % Re-plot HoT on top to ensure it is clearly visible
-        % plot(time_HoT, mean_slack_HoT, ...
-        %      'Color', blue, ...
-        %      'LineWidth', LW, ...
-        %      'LineStyle', '-');
-        % 
+        plot(time_HoT, mean_slack_HoT_norm, ...
+            'Color', blue, ...
+            'LineWidth', LWth, ...
+            'LineStyle', '-');
+        ylim([0 1.1]);
+        
         xlabel('Time (s)', 'FontSize', FS);
-        ylabel('Average Slack Variable', 'FontSize', FS);
+        ylabel('Normalized Average HoT Slack', 'FontSize', FS);
         
         grid on;
         
-        % Add Legend
-        legend([h_slack_hot, h_slack_not, h_slack_sl], ...
-               {'HoT (Average Slack)', 'NoT (Average Slack)','SL (Average Slack)'}, ...
-               'Location', 'northoutside', 'NumColumns', 2);
-
-
-        %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+        legend('HoT (Normalized)', ...
+               'Location', 'best');
+        
         set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
-               
+        
         hold off;
 
 

@@ -320,6 +320,11 @@ legend({'Rate samples',...
         'PSCA-RG'},...
         'Location','northoutside',...
         'NumColumns',3);
+% --- Match reference PDF axis limits ---
+lim_xmin = xmin; lim_xmax = xmax;
+lim_ymin = ymin; lim_ymax = ymax;
+xlim([lim_xmin lim_xmax]);
+ylim([lim_ymin lim_ymax]);
 
 cb = colorbar;
 cb.Label.String = 'Total network rate (bit/s)';
@@ -414,31 +419,64 @@ while time_draw(end) < Tf && iter_draw <= imax
 end
 
 
+% %% ------------------------------------------
+% %  Figure: Cumulative network rate for the reference trajectory,
+% %  sum_points sum_k R_points(k) (point is a point of the reference
+% %  trajectory)
+% %  ------------------------------------------
+% Trans_PSCA_BP = cumsum(Total_PSCA_BP) ;
+% Trans_DK_BP = cumsum(Total_DK_BP) ;
+% blue   = [0 0 255]/255;
+% red    = [220 20 60]/255;
+% 
+% figure; hold on;
+% plot(time_draw((1:end-1)),Trans_DK_BP, '-','Color',blue, 'LineWidth', LW, 'DisplayName','PURG');
+% plot(time_draw(1:end-1),Trans_PSCA_BP, '-','Color',red, 'LineWidth', LWth, 'DisplayName','PSCA-RG');
+% 
+% 
+% 
+% xlabel('Time (s)'); ylabel('Cumulative sumrate (bit/s)');
+% legend('show','Location','best'); grid on;
+% 
+% 
+% %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+% set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
+% set(gca, 'FontSize', FS, 'LineWidth', AXLW);
+
 %% ------------------------------------------
-%  Figure: Cumulative network rate for the reference trajectory,
-%  sum_points sum_k R_points(k) (point is a point of the reference
-%  trajectory)
+%  Figure: Normalized Cumulative Network Rate
 %  ------------------------------------------
-Trans_PSCA_BP = cumsum(Total_PSCA_BP) ;
-Trans_DK_BP = cumsum(Total_DK_BP) ;
-blue   = [0 0 255]/255;
-red    = [220 20 60]/255;
 
-figure; hold on;
-plot(time_draw((1:end-1)),Trans_DK_BP, '-','Color',blue, 'LineWidth', LW, 'DisplayName','PURG');
-plot(time_draw(1:end-1),Trans_PSCA_BP, '-','Color',red, 'LineWidth', LWth, 'DisplayName','PSCA-RG');
+Trans_PSCA_BP = cumsum(Total_PSCA_BP);
+Trans_DK_BP   = cumsum(Total_DK_BP);
 
+% Normalize using the highest value between PURG and PSCA-RG
+maxVal = max([max(Trans_PSCA_BP), max(Trans_DK_BP)]);
 
+Trans_PSCA_BP_norm = Trans_PSCA_BP / maxVal;
+Trans_DK_BP_norm   = Trans_DK_BP   / maxVal;
 
-xlabel('Time (s)'); ylabel('Cumulative sumrate (bit/s)');
-legend('show','Location','best'); grid on;
+blue = [0 0 255]/255;
+red  = [220 20 60]/255;
 
+figure;
+hold on;
 
-%set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
+plot(time_draw(1:end-1), Trans_DK_BP_norm, '-', ...
+    'Color', blue, 'LineWidth', LW, 'DisplayName', 'PURG');
+
+plot(time_draw(1:end-1), Trans_PSCA_BP_norm, '-', ...
+    'Color', red, 'LineWidth', LWth, 'DisplayName', 'PSCA-RG');
+
+xlabel('Time (s)');
+ylabel('Normalized Cumulative Sum Rate');
+ylim([0 1.1]);
+
+legend('show', 'Location', 'best');
+grid on;
+
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);
-
-
 
 
 %% ------------------------------------------
