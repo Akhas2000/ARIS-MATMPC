@@ -57,7 +57,7 @@ for k=1:K
   
     Gamma_k=F*Gamma_k;
 
-    Rates=[Rates, Bandwidth(k)*log(1+Gamma_k)/log(2)];
+    Rates=[Rates, Bandwidth(k)*log(1+Gamma_k)/(K*log(2))];
     
 end
 

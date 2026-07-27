@@ -127,6 +127,7 @@ AXLW    = 0.5;                 % axis box line width
 % AXLW    = 0.5;                % axis box line width (MATLAB default)
 % FIGSIZE = [0 0 8 6];           % MATLAB default figure size in inches (560x420 px screen size ≈ this)
 
+
 % Define specific colors for the new plots to match the previous aesthetic
 purple = [148 0 211]/255;
 teal   = [0 128 128]/255;
@@ -141,9 +142,10 @@ plot(K_set, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', LW, 'DisplayName', '
 plot(K_set, Tot_HoT_B,  '-d', 'LineWidth', LW, 'DisplayName', 'HoT-B');
 plot(K_set, Tot_NoT_B,  '-x', 'LineWidth', LW, 'DisplayName', 'NoT-B');
 xlabel('Number of Users (I)');
-ylabel('Total Transmitted Data');
+ylabel('Network throughput (bit)');
 %title('Performance Comparison of All Schemes');
-legend('Location', 'Best');
+%legend('Location', 'Best');
+legend('Location','southoutside','NumColumns',4);
 %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
 set(gca, 'FontSize', FS, 'LineWidth', AXLW);

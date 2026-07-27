@@ -245,7 +245,7 @@ lim_ymin = ymin; lim_ymax = ymax;
 xlim([lim_xmin lim_xmax]);
 ylim([lim_ymin lim_ymax]);
 cb = colorbar;
-cb.Label.String = 'Total network rate (bit/s)';
+cb.Label.String = 'Sum-rate (bit/s)';
 cb.Label.FontSize = FSL;
 %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
 set(findall(gcf,'-property','FontSize'), 'FontSize', FS);
@@ -360,7 +360,7 @@ for t = 1:length(trajList)
 end
 
 xlabel('Time (s)');
-ylabel('Normalized Cumulative Data Rate');
+ylabel('Normalized cumulative sum-rate');
 ylim([0 1.1]);
 
 legend('RRG', ...

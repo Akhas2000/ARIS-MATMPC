@@ -121,7 +121,7 @@ switch settings.model
             xlim([lim_xmin lim_xmax]);
             ylim([lim_ymin lim_ymax]);
             cb = colorbar;
-            cb.Label.String = 'Total network rate (bit/s)';
+            cb.Label.String = 'Sum-rate (bit/s)';
             cb.Label.FontSize = FSL;
 
             
@@ -563,7 +563,7 @@ switch settings.model
 
         
         
-        xlabel('Time (s)'); ylabel('Total network rate (bit/s)');
+        xlabel('Time (s)'); ylabel('Sum-rate (bit/s)');
         legend('show','Location','best'); grid on;
 
         %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
@@ -658,7 +658,7 @@ switch settings.model
         % Labels & formatting
         % =========================
         xlabel('Time (s)', 'FontSize', FS);
-        ylabel('Average transmitted data (bit)', 'FontSize', FS);
+        ylabel('Cumulative average throughput of users (bit)', 'FontSize', FS);
         grid on;
         set(gca, 'FontSize', FS, 'LineWidth', AXLW);
         ytickformat('%.1f');
@@ -668,7 +668,7 @@ switch settings.model
         % =========================
         legend([hMeanHoT, hMeanNoT, hMeanSL, ...
                 hShadeHoT, hShadeNoT, hShadeSL, hThr], ...
-               {'Mean HoT', 'Mean NoT', 'Mean SL', ...
+               {'HoT', 'NoT', 'SL', ...
                 'HoT \pm1 std', 'NoT \pm1 std', 'SL \pm1 std', ...
                 'R_{min}T_f'}, ...
                'Location', 'northoutside', 'NumColumns', 6,'FontSize', FS);
@@ -692,8 +692,8 @@ switch settings.model
         Trans_HoT_P  = cumsum(Total_HoT_P)  * Ts;
         
         figure; hold on;
-        Trans_HOV_BP = cumsum(Total_HOV_BP) * Ts;
-        plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', LW, 'DisplayName', 'HOV-BP');
+        % Trans_HOV_BP = cumsum(Total_HOV_BP) * Ts;
+        % plot(t_plot, Trans_HOV_BP, '-', 'Color', teal, 'LineWidth', LW, 'DisplayName', 'HOV-BP');
 
         plot(t_plot, Trans_HoT_BP, 'b-', 'LineWidth', LW, 'DisplayName','HoT-BP');
         plot(t_plot, Trans_NoT_BP, 'b--',  'LineWidth', LW, 'DisplayName','NoT-BP');
@@ -713,7 +713,7 @@ switch settings.model
         plot(t_plot, Trans_HoT_B,  '-' ,'color', "#FF8800",'LineWidth', LW, 'DisplayName','HoT-B');
         plot(t_plot, Trans_NoT_B,  '--', 'color', "#FF8800", 'LineWidth', LW, 'DisplayName','NoT-B');
         
-        xlabel('Time (s)'); ylabel('Cumulative transmitted data (bit)');
+        xlabel('Time (s)'); ylabel('Cumulative throughput of the network (bit)');
         legend('show','Location','best'); grid on;
 
         %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
@@ -1291,7 +1291,7 @@ switch settings.model
         ylim([0 1.1]);
         
         xlabel('Time (s)', 'FontSize', FS);
-        ylabel('Normalized Average HoT Slack', 'FontSize', FS);
+        ylabel('Normalized average slack of HoT', 'FontSize', FS);
         
         grid on;
         

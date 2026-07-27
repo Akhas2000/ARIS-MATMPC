@@ -147,7 +147,7 @@ plot(x_axis, Tot_SL_BP,  '-*', 'Color', purple, 'LineWidth', LW, 'DisplayName', 
 plot(x_axis, Tot_HoT_B,  '-d', 'LineWidth', LW, 'DisplayName', 'HoT-B');
 plot(x_axis, Tot_NoT_B,  '-x', 'LineWidth', LW, 'DisplayName', 'NoT-B');
 xlabel('Number of RIS elements (M)');
-ylabel('Total Transmitted Data');
+ylabel('Network throughput (bit)');
 %title('Performance vs. RIS Size');
 legend('Location','Best');
 %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size

@@ -42,7 +42,7 @@ nbx_idx = [1:3];
 
 
 %% create variables
-addpath('/home/abdoul/Desktop/Matlab_Sims/TVT_ARIS/Casadi');
+addpath('/home/abdoul/Desktop/Matlab_Sims/TVT_ARIS_Final/Casadi');
 import casadi.*
 
 
@@ -155,8 +155,7 @@ pU = [states(1), states(2), states(3)]; % UAV position
 
 % Power and Bandwidth
 Power = 0.2*ones(1, K_User);
-Bandwidth = 10^6 * ones(1, K_User);
-
+Bandwidth = 5*10^6 * ones(1, K_User);
 % Initialize theta
 theta = params(1:M_ele);
 f_phases=params(M_ele+1:M_ele+N_A);

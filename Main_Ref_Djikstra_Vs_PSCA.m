@@ -327,7 +327,7 @@ xlim([lim_xmin lim_xmax]);
 ylim([lim_ymin lim_ymax]);
 
 cb = colorbar;
-cb.Label.String = 'Total network rate (bit/s)';
+cb.Label.String = 'Sum-rate (bit/s)';
 cb.Label.FontSize = FSL;
 
 %set(gcf, 'Units', 'inches', 'Position', FIGSIZE);   % physical size
@@ -469,7 +469,7 @@ plot(time_draw(1:end-1), Trans_PSCA_BP_norm, '-', ...
     'Color', red, 'LineWidth', LWth, 'DisplayName', 'PSCA-RG');
 
 xlabel('Time (s)');
-ylabel('Normalized Cumulative Sum Rate');
+ylabel('Normalized cumulative sum-rate');
 ylim([0 1.1]);
 
 legend('show', 'Location', 'best');
