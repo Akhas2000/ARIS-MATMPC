@@ -24,9 +24,9 @@ video_filename = 'UAV_Flight_Trajectory_NoT.avi';
 % color_benchmark=[0.75 0.47 0.85];%Mauve
 
 % %HoT
-state_sim=state_HoT;
-pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
-color_benchmark=[0.4660 0.6740 0.1880 ];%green
+% state_sim=state_HoT;
+% pUser_ref = [pathXY_ProxyUtility, h_UAV*ones(Ns,1)];  % user/reference path
+% color_benchmark=[0.4660 0.6740 0.1880 ];%green
 
 %NoT
 state_sim=state_NoT;

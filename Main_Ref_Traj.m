@@ -99,6 +99,7 @@ freq=settings.freq;
 p_bar_User=settings.p_bar_User; 
 
 % ---------- RANDOM NODE CO-ORDINATES ----------------------------------
+rng(902);
 x_vals = xmin + (xmax-xmin)*rand(1,Nrand);   % 1×Nrand
 y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 

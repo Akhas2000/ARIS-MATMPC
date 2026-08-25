@@ -21,7 +21,7 @@ beta_dB = -30;
 beta_B = 10^(beta_dB / 10);
 beta_R = 10^(beta_dB / 10);
 
-R_min=1*10^6;
+R_min=1.25*10^6;
 
 
 %% Dimensions
@@ -41,7 +41,7 @@ nbx_idx = [1:3];
 
 
 %% create variables
-addpath('/home/abdoul/Desktop/Matlab_Sims/TVT_ARIS_Final/Casadi');
+addpath('/home/abdoul/Desktop/Matlab_Sims/TVT_ARIS_Final_MinorRev/Casadi');
 import casadi.*
 
 
@@ -148,7 +148,12 @@ pU = [states(1), states(2), states(3)]; % UAV position
 
 
 % Set positions
-[pA, pR, pK] = Setup_env(N_A, K_User, M_size, freq);
+%[pA, pR, pK] = Setup_env(N_A, K_User, M_size, freq);
+
+% Reproducible user positions
+[pA, pR, pK] = Setup_env(N_A, K_User, M_size, freq, 654321);
+
+
 %load('pK.mat');
 
 
@@ -156,9 +161,10 @@ pU = [states(1), states(2), states(3)]; % UAV position
 Power = 0.2*ones(1, K_User);
 Bandwidth = 5*10^6 * ones(1, K_User);
 
-% Initialize theta
-theta = params(1:M_ele);
-f_phases=params(M_ele+1:M_ele+N_A);
+% Initialize theta and beamvector 
+
+f_phases = params(1:N_A);
+theta = params(N_A+1:N_A+M_ele);
 
 
 % %Phase_shift optimization

@@ -23,7 +23,7 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
             %% Initial conditions
             v_max=17;v_min=0;data.v_min=v_min;data.v_max=v_max;
             sv_init = 0;
-            sv_max  = 7*1e7;
+            sv_max  = 7*1e17;
 
             
             Omega_min=16^2;Omega_max=100^2;data.Omega_min=Omega_min;data.Omega_max=Omega_max;%Hz^2
@@ -42,15 +42,27 @@ function [input, data]  = InitData(settings,Ns,p_init,h_UAV,pathXY)
 
 
             %% Weights
-
-
             q_rot=10; 
             q_omega=30;
             q_sv=2*1e-12;
-            q_p=6;
-            q_h=10;
+            q_p=10;
+            q_h=12;
             q_v=1.1;
+
+
+
             
+
+
+
+            % 
+            % q_rot=10; 
+            % q_omega=30;
+            % q_sv=2*1e-12;
+            % q_p=6;
+            % q_h=10;
+            % q_v=1.1;
+            % 
 
 
             q_0=[q_p;q_p;q_h; q_v;q_v;q_v;q_sv*ones(K_User,1);q_omega;q_omega;q_omega;q_rot];

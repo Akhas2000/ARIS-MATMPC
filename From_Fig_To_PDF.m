@@ -4,5 +4,5 @@
 
 % 
 % % Export with tight bounding box (no wasted whitespace, true vector)
-exportgraphics(gcf, '/home/abdoul/Pictures/ARIS_TVT_V2/Scale_M_RIS_elements.pdf', 'ContentType', 'vector');
+exportgraphics(gcf, '/home/abdoul/Pictures/ARIS_TVT_V2/Scale_K_Users.pdf', 'ContentType', 'vector');
 

@@ -119,7 +119,7 @@ beta_B=settings.beta_B;
 freq=settings.freq; 
 p_bar_User=settings.p_bar_User; 
 % ---------- RANDOM NODE CO-ORDINATES ----------------------------------
-
+rng(902);
 x_vals = xmin + (xmax-xmin)*rand(1,Nrand);   % 1×Nrand
 y_vals = ymin + (ymax-ymin)*rand(1,Nrand);   % 1×Nrand
 R_mat   = zeros(1,Nrand);                     % Σ-rate per node
@@ -128,6 +128,7 @@ Proxy_Utility_mat   = zeros(1,Nrand);         % Σ-rate per node
 % ---------- OPTIMAL TRAJECTORY (k-NN graph) ---------------------------
 p_init  =  [-100 -100];         % start (physical coordinate)
 p_final = [ -100  100];         % destination
+
 
 x_vals(1)=p_init(1);x_vals(Nrand)=p_final(1);
 y_vals(1)=p_init(2);y_vals(Nrand)=p_final(2);
@@ -201,12 +202,13 @@ Ns = size(pathXY_ProxyUtility,1);
 q_rot=0; 
 q_omega=0;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
-sv_init = 0;
-sv_max  = 7*1e7;
+
+sv_init = 7*1e5;
+sv_max  = 7*1e17;
 
 [controls_NoT, state_NoT, time_NoT, data_NoT, solve_time_NoT] = ...
     Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
@@ -216,12 +218,13 @@ sv_max  = 7*1e7;
 q_rot=10; 
 q_omega=30;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
+
 sv_init = 0;
-sv_max  = 7*1e7;
+sv_max  = 7*1e17;
 
 [controls_HoT, state_HoT, time_HoT, data_HoT, solve_time_HoT] = ...
     Simulation_Main(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
@@ -242,12 +245,13 @@ pathXY_Straight = [pathXY_Straight; repmat(p_final, N, 1)];
 q_rot=10; 
 q_omega=30;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
+
 sv_init = 0;
-sv_max  = 7*1e7;
+sv_max  = 7*1e17;
 
 % 3. Call NMPC on the straight line reference
 [controls_SL, state_SL, time_SL, data_SL, solve_time_SL] = ...

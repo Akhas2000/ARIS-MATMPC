@@ -168,15 +168,17 @@ Ns = size(pathXY_ProxyUtility,1);
 %  ========================================================================
 
 % -------- NoT : No orientation Tracking --------
+
 q_rot=0; 
 q_omega=0;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
-sv_init = 0;
-sv_max  = 7*1e7;
+
+sv_init = 7*1e5;
+sv_max  = 7*1e17;
 % (Note: using Simulation_Scale but with updated arguments reflecting the new Main)
 [controls_NoT, state_NoT, time_NoT, data_NoT, solve_time_NoT] = ...
     Simulation_Scale(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
@@ -186,13 +188,13 @@ sv_max  = 7*1e7;
 q_rot=10; 
 q_omega=30;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
-sv_init = 0;
-sv_max  = 7*1e7;
 
+sv_init = 0;
+sv_max  = 7*1e17;
 [controls_HoT, state_HoT, time_HoT, data_HoT, solve_time_HoT] = ...
     Simulation_Scale(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
                     h_UAV,pathXY_ProxyUtility,Tf_init,pA,pR,freq,p_bar_User,M_ele);
@@ -207,12 +209,13 @@ pathXY_Straight = [pathXY_Straight; repmat(p_final, N, 1)];
 q_rot=10; 
 q_omega=30;
 q_sv=2*1e-12;
-q_p=6;
-q_h=10;
+q_p=10;
+q_h=12;
 q_v=1.1;
 
+
 sv_init = 0;
-sv_max  = 7*1e7;
+sv_max  = 7*1e17;
 
 [controls_SL, state_SL, time_SL, data_SL, solve_time_SL] = ...
     Simulation_Scale(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
