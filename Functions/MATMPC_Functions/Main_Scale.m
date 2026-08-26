@@ -193,7 +193,7 @@ q_h=12;
 q_v=1.1;
 
 
-sv_init = 0;
+sv_init = 7*1e5;
 sv_max  = 7*1e17;
 [controls_HoT, state_HoT, time_HoT, data_HoT, solve_time_HoT] = ...
     Simulation_Scale(settings,opt,N,Ns,sv_init,sv_max,q_sv,q_p,q_h,q_v,q_rot,q_omega, ...
@@ -214,7 +214,7 @@ q_h=12;
 q_v=1.1;
 
 
-sv_init = 0;
+sv_init = 7*1e5;
 sv_max  = 7*1e17;
 
 [controls_SL, state_SL, time_SL, data_SL, solve_time_SL] = ...
