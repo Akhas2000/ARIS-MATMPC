@@ -5,7 +5,7 @@ K_set   = [2 4 6 8 10];     % Number of users to test
 N_A     = 3;                % Antenna elements
 M_size  = [4, 4];           % RIS size
 N_iter  = 5;                % Number of random realizations per K
-R_min=1.25*1e6;
+R_min=1*1e6;
 
 
 
